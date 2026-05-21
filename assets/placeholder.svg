@@ -1,0 +1,8 @@
+<!-- assets/placeholder.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="#f0e6d6"/>
+  <path d="M100 50 Q95 30 100 20 Q105 30 100 50 Z" fill="#f4b740"/>
+  <rect x="80" y="50" width="40" height="100" rx="6" fill="#8b5a2b"/>
+  <rect x="80" y="140" width="40" height="10" fill="#6b4420"/>
+  <text x="100" y="185" text-anchor="middle" fill="#6b4420" font-family="Arial" font-size="12">Lumen</text>
+</svg>

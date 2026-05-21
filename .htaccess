@@ -1,0 +1,7 @@
+# .htaccess — защита папки от исполнения PHP
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<FilesMatch "\.(php|phtml|php5)$">
+    Deny from all
+</FilesMatch>

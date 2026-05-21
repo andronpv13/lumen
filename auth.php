@@ -1,0 +1,268 @@
+<?php
+// auth.php
+require_once __DIR__ . '/includes/functions.php';
+
+$tab = $_GET['tab'] ?? 'login';
+
+if ($_SERVER['REQUEST_METHOD']==='GET' && isset($_GET['check'])) {
+    header('Content-Type: application/json');
+    $check = $_GET['check'];
+    $value = trim($_GET['value'] ?? '');
+    $allowed = ['name','email'];
+    if (!in_array($check, $allowed, true) || $value === '') {
+        echo json_encode(['ok' => false]);
+        exit;
+    }
+    if ($check === 'email') {
+        $stmt = db()->prepare("SELECT COUNT(*) FROM users WHERE email=?");
+    } else {
+        $stmt = db()->prepare("SELECT COUNT(*) FROM users WHERE name=?");
+    }
+    $stmt->execute([$value]);
+    $exists = $stmt->fetchColumn() > 0;
+    echo json_encode(['ok' => true, 'exists' => (bool)$exists]);
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD']==='POST') {
+    csrf_check();
+    if (($_POST['mode'] ?? '') === 'login') {
+        $email = trim($_POST['email']);
+        $stmt = db()->prepare("SELECT * FROM users WHERE email=?");
+        $stmt->execute([$email]);
+        $u = $stmt->fetch();
+        if ($u && password_verify($_POST['password'], $u['password'])) {
+            unset($u['password']);
+            $_SESSION['user'] = $u;
+            flash('Добро пожаловать, '. $u['name'] .'!','success');
+            redirect('/');
+        } else {
+            flash('Неверный email или пароль','error');
+        }
+    } else {
+        $email = trim($_POST['email']);
+        $name = trim($_POST['name']);
+        $pass = $_POST['password'];
+        if ($name === '' || preg_match('/[\s\t]/', $name)) {
+            flash('Логин не может содержать пробелы или табы','error');
+        } elseif ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || preg_match('/[\s\t]/', $email)) {
+            flash('Неверный email или email содержит пробелы','error');
+        } elseif (preg_match('/[\s\t]/', $pass)) {
+            flash('Пароль не может содержать пробелы или табы','error');
+        } elseif (strlen($pass) < 6) {
+            flash('Пароль минимум 6 символов','error');
+        } else {
+            $stmt = db()->prepare("SELECT COUNT(*) FROM users WHERE email=? OR name=?");
+            $stmt->execute([$email, $name]);
+            if ($stmt->fetchColumn() > 0) {
+                flash('Имя пользователя или email уже заняты','error');
+            } else {
+                $hash = password_hash($pass, PASSWORD_BCRYPT);
+                $stmt = db()->prepare("INSERT INTO users (email,password,name,role) VALUES (?,?,?,'customer')");
+                $stmt->execute([$email, $hash, $name]);
+                $id = db()->lastInsertId();
+                $_SESSION['user'] = ['id'=>(int)$id, 'email'=>$email, 'name'=>$name, 'role'=>'customer'];
+                flash('Регистрация успешна!','success');
+                redirect('/');
+            }
+        }
+    }
+}
+
+$pageTitle = 'Вход / Регистрация';
+require __DIR__ . '/includes/header.php';
+?>
+
+<div class="auth-wrap">
+  <div class="tabs">
+    <a href="?tab=login" class="<?= $tab==='login'?'active':'' ?>">Вход</a>
+    <a href="?tab=register" class="<?= $tab==='register'?'active':'' ?>">Регистрация</a>
+  </div>
+
+  <?php if($tab==='login'): ?>
+    <form method="post" class="auth-form">
+      <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
+      <input type="hidden" name="mode" value="login">
+      <label>Email <input type="email" name="email" required></label>
+      <label>Пароль <input type="password" name="password" required></label>
+      <button class="btn btn-primary">Войти</button>
+      <p class="muted small">Тест: admin@lumen.ru / admin123</p>
+    </form>
+  <?php else: ?>
+    <form method="post" class="auth-form" id="register-form" novalidate>
+      <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
+      <input type="hidden" name="mode" value="register">
+
+      <label class="field-label">Логин
+        <div class="field-input-wrap">
+          <input type="text" name="name" id="register-name" autocomplete="username" required>
+        </div>
+        <div class="field-hint" id="hint-name"></div>
+      </label>
+
+      <label class="field-label">Email
+        <div class="field-input-wrap">
+          <input type="email" name="email" id="register-email" autocomplete="email" required>
+        </div>
+        <div class="field-hint" id="hint-email"></div>
+      </label>
+
+      <label class="field-label">Пароль
+        <div class="field-input-wrap">
+          <input type="password" name="password" id="register-password" minlength="6" autocomplete="new-password" required>
+          <button type="button" class="field-toggle" data-target="register-password" aria-label="Показать пароль">👁</button>
+        </div>
+        <div class="field-hint" id="hint-password"></div>
+      </label>
+
+      <label class="field-label">Подтверждение пароля
+        <div class="field-input-wrap">
+          <input type="password" name="confirm_password" id="register-confirm-password" autocomplete="new-password" required>
+          <button type="button" class="field-toggle" data-target="register-confirm-password" aria-label="Показать пароль">👁</button>
+        </div>
+        <div class="field-hint" id="hint-confirm-password"></div>
+      </label>
+
+      <button class="btn btn-primary" id="register-submit">Создать аккаунт</button>
+    </form>
+  <?php endif; ?>
+</div>
+
+<script>
+(function(){
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const nameInput = document.getElementById('register-name');
+  const emailInput = document.getElementById('register-email');
+  const passwordInput = document.getElementById('register-password');
+  const confirmInput = document.getElementById('register-confirm-password');
+  const submitButton = document.getElementById('register-submit');
+  const hints = {
+    name: document.getElementById('hint-name'),
+    email: document.getElementById('hint-email'),
+    password: document.getElementById('hint-password'),
+    confirm: document.getElementById('hint-confirm-password')
+  };
+
+  function setState(input, valid, message) {
+    input.classList.toggle('input-valid', valid);
+    input.classList.toggle('input-invalid', !valid);
+    const hint = hints[input.dataset.field];
+    if (hint) {
+      hint.textContent = message || '';
+    }
+  }
+
+  function validateNoSpaces(value) {
+    return !/[\s\t]/.test(value);
+  }
+
+  function checkField(input) {
+    if (!input) return { valid: true };
+    const field = input.dataset.field;
+    const value = input.value.trim();
+    let valid = true;
+    let message = '';
+
+    if (!value) {
+      valid = false;
+      message = 'Поле не может быть пустым';
+    } else if (!validateNoSpaces(input.value)) {
+      valid = false;
+      message = 'Пробелы и табы запрещены';
+    } else if (field === 'email') {
+      if (!emailPattern.test(value)) {
+        valid = false;
+        message = 'Неверный формат email';
+      }
+    } else if (field === 'password') {
+      if (value.length < 6) {
+        valid = false;
+        message = 'Минимум 6 символов';
+      }
+    } else if (field === 'confirm') {
+      if (value !== passwordInput.value) {
+        valid = false;
+        message = 'Пароли не совпадают';
+      }
+    }
+
+    setState(input, valid, message);
+    return { valid, message };
+  }
+
+  function checkAvailability(input, type) {
+    const value = input.value.trim();
+    if (!value || !validateNoSpaces(input.value)) return;
+    if (type === 'email' && !emailPattern.test(value)) return;
+
+    fetch(`?check=${type}&value=` + encodeURIComponent(value), { credentials: 'same-origin' })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.ok) return;
+        if (data.exists) {
+          setState(input, false, type === 'email' ? 'Email уже занят' : 'Имя занято');
+        } else {
+          if (checkField(input).valid) {
+            setState(input, true, type === 'email' ? 'Email свободен' : 'Имя доступно');
+          }
+        }
+      })
+      .catch(() => {});
+  }
+
+  function attachToggle(button) {
+    const target = document.getElementById(button.dataset.target);
+    if (!target) return;
+    button.addEventListener('click', function(){
+      const type = target.type === 'password' ? 'text' : 'password';
+      target.type = type;
+      button.textContent = type === 'password' ? '👁' : '🙈';
+    });
+  }
+
+  document.querySelectorAll('.field-toggle').forEach(attachToggle);
+
+  if (emailInput && nameInput && passwordInput && confirmInput) {
+    emailInput.dataset.field = 'email';
+    nameInput.dataset.field = 'name';
+    passwordInput.dataset.field = 'password';
+    confirmInput.dataset.field = 'confirm';
+
+    const debounced = (fn, delay = 300) => {
+      let timeout;
+      return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn.apply(this, args), delay);
+      };
+    };
+
+    nameInput.addEventListener('input', debounced(() => {
+      const result = checkField(nameInput);
+      if (result.valid) checkAvailability(nameInput, 'name');
+    }));
+    emailInput.addEventListener('input', debounced(() => {
+      const result = checkField(emailInput);
+      if (result.valid) checkAvailability(emailInput, 'email');
+    }));
+    passwordInput.addEventListener('input', () => {
+      checkField(passwordInput);
+      if (confirmInput.value) checkField(confirmInput);
+    });
+    confirmInput.addEventListener('input', () => checkField(confirmInput));
+
+    submitButton.addEventListener('click', function(event) {
+      const fields = [nameInput, emailInput, passwordInput, confirmInput];
+      let allValid = true;
+      fields.forEach(input => {
+        const result = checkField(input);
+        if (!result.valid) allValid = false;
+      });
+      if (!allValid) {
+        event.preventDefault();
+      }
+    });
+  }
+})();
+</script>
+
+<?php require __DIR__ . '/includes/footer.php'; ?>
