@@ -55,6 +55,10 @@ main{flex:1}
 .btn{display:inline-block;padding:10px 18px;border:none;border-radius:var(--radius);font-size:.95rem;cursor:pointer;transition:all .2s;text-decoration:none;background:var(--border);color:var(--text)}
 .btn-primary{background:var(--primary);color:#fff}
 .btn-primary:hover{background:var(--primary-dark);text-decoration:none}
+.btn:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
 .btn-ghost{background:transparent;border:1px solid var(--border)}
 .btn-ghost:hover{background:var(--border);text-decoration:none}
 .btn-sm{padding:6px 12px;font-size:.85rem}
@@ -131,8 +135,8 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .field-hint{margin-top:6px;font-size:.85rem;color:var(--muted);min-height:18px}
 .input-valid{border-color:#2d7a4f;background:rgba(45,122,79,.08)}
 .input-invalid{border-color:#b33a3a;background:rgba(179,58,58,.08)}
-.field-label .input-invalid ~ .field-hint{color:#b33a3a}
-.field-label .input-valid ~ .field-hint{color:#2d7a4f}
+.field-input-wrap.input-invalid + .field-hint{color:#b33a3a}
+.field-input-wrap.input-valid + .field-hint{color:#2d7a4f}
 
 /* Orders */
 .status{padding:3px 10px;border-radius:10px;font-size:.8rem;font-weight:500}

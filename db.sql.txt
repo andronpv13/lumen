@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
     phone VARCHAR(30),
     address TEXT,
     role ENUM('admin','moderator','customer') DEFAULT 'customer',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS categories (

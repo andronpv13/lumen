@@ -43,8 +43,12 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         $email = trim($_POST['email']);
         $name = trim($_POST['name']);
         $pass = $_POST['password'];
-        if ($name === '' || preg_match('/[\s\t]/', $name)) {
-            flash('Логин не может содержать пробелы или табы','error');
+        if ($name === '') {
+          flash('Логин не может быть пустым','error');
+        } elseif (preg_match('/[\s\t]/', $name)) {
+          flash('Логин не может содержать пробелы или табы','error');
+        } elseif (strlen($name) < 4) {
+          flash('Логин должен быть не менее 4 символов','error');
         } elseif ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || preg_match('/[\s\t]/', $email)) {
             flash('Неверный email или email содержит пробелы','error');
         } elseif (preg_match('/[\s\t]/', $pass)) {
@@ -143,9 +147,15 @@ require __DIR__ . '/includes/header.php';
     confirm: document.getElementById('hint-confirm-password')
   };
 
-  function setState(input, valid, message) {
+  function setState(input, valid, message, forceInvalid = false) {
+    const wrap = input.closest('.field-input-wrap');
+    const invalid = !valid && forceInvalid;
+    if (wrap) {
+      wrap.classList.toggle('input-valid', valid);
+      wrap.classList.toggle('input-invalid', invalid);
+    }
     input.classList.toggle('input-valid', valid);
-    input.classList.toggle('input-invalid', !valid);
+    input.classList.toggle('input-invalid', invalid);
     const hint = hints[input.dataset.field];
     if (hint) {
       hint.textContent = message || '';
@@ -156,37 +166,59 @@ require __DIR__ . '/includes/header.php';
     return !/[\s\t]/.test(value);
   }
 
-  function checkField(input) {
+  function updateSubmitState() {
+    const fields = [nameInput, emailInput, passwordInput, confirmInput];
+    const allValid = fields.every(input => checkField(input, true).valid);
+    submitButton.disabled = !allValid;
+  }
+
+  function checkField(input, showEmptyAsValid = false) {
     if (!input) return { valid: true };
     const field = input.dataset.field;
-    const value = input.value.trim();
+    const rawValue = input.value;
+    const value = rawValue.trim();
     let valid = true;
     let message = '';
+    let forceInvalid = false;
 
-    if (!value) {
-      valid = false;
-      message = 'Поле не может быть пустым';
-    } else if (!validateNoSpaces(input.value)) {
+    if (!validateNoSpaces(rawValue)) {
       valid = false;
       message = 'Пробелы и табы запрещены';
+      forceInvalid = true;
+    } else if (!value) {
+      valid = false;
+      message = showEmptyAsValid ? '' : 'Поле не может быть пустым';
+    } else if (field === 'name') {
+      if (value.length < 4) {
+        valid = false;
+        message = 'Минимум 4 символа';
+        forceInvalid = true;
+      }
     } else if (field === 'email') {
-      if (!emailPattern.test(value)) {
+      if (/\s/.test(rawValue)) {
+        valid = false;
+        message = 'Пробелы и табы запрещены';
+        forceInvalid = true;
+      } else if (!emailPattern.test(value)) {
         valid = false;
         message = 'Неверный формат email';
+        forceInvalid = true;
       }
     } else if (field === 'password') {
       if (value.length < 6) {
         valid = false;
         message = 'Минимум 6 символов';
+        forceInvalid = true;
       }
     } else if (field === 'confirm') {
       if (value !== passwordInput.value) {
         valid = false;
         message = 'Пароли не совпадают';
+        forceInvalid = true;
       }
     }
 
-    setState(input, valid, message);
+    setState(input, valid, message, forceInvalid);
     return { valid, message };
   }
 
@@ -206,21 +238,10 @@ require __DIR__ . '/includes/header.php';
             setState(input, true, type === 'email' ? 'Email свободен' : 'Имя доступно');
           }
         }
+        updateSubmitState();
       })
       .catch(() => {});
   }
-
-  function attachToggle(button) {
-    const target = document.getElementById(button.dataset.target);
-    if (!target) return;
-    button.addEventListener('click', function(){
-      const type = target.type === 'password' ? 'text' : 'password';
-      target.type = type;
-      button.textContent = type === 'password' ? '👁' : '🙈';
-    });
-  }
-
-  document.querySelectorAll('.field-toggle').forEach(attachToggle);
 
   if (emailInput && nameInput && passwordInput && confirmInput) {
     emailInput.dataset.field = 'email';
@@ -237,24 +258,32 @@ require __DIR__ . '/includes/header.php';
     };
 
     nameInput.addEventListener('input', debounced(() => {
-      const result = checkField(nameInput);
+      const result = checkField(nameInput, true);
       if (result.valid) checkAvailability(nameInput, 'name');
+      updateSubmitState();
     }));
     emailInput.addEventListener('input', debounced(() => {
-      const result = checkField(emailInput);
+      const result = checkField(emailInput, true);
       if (result.valid) checkAvailability(emailInput, 'email');
+      updateSubmitState();
     }));
     passwordInput.addEventListener('input', () => {
-      checkField(passwordInput);
-      if (confirmInput.value) checkField(confirmInput);
+      checkField(passwordInput, true);
+      if (confirmInput.value) checkField(confirmInput, true);
+      updateSubmitState();
     });
-    confirmInput.addEventListener('input', () => checkField(confirmInput));
+    confirmInput.addEventListener('input', () => {
+      checkField(confirmInput, true);
+      updateSubmitState();
+    });
+
+    submitButton.disabled = true;
 
     submitButton.addEventListener('click', function(event) {
       const fields = [nameInput, emailInput, passwordInput, confirmInput];
       let allValid = true;
       fields.forEach(input => {
-        const result = checkField(input);
+        const result = checkField(input, false);
         if (!result.valid) allValid = false;
       });
       if (!allValid) {
