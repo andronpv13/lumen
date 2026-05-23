@@ -32,6 +32,16 @@ $categories = db()->query("SELECT * FROM categories ORDER BY name")->fetchAll();
 $pageTitle = 'Каталог свечей';
 require __DIR__ . '/includes/header.php';
 ?>
+<h2 align="center">Каталог свечей</h2>
+
+<div class="filter-sidebar">
+        <select id="category-filter" name="cat" onchange="document.location='?cat='+this.value;" style="width: fit-content;">
+            <option value="">Все товары</option>
+            <?php foreach($categories as $c): ?>
+                <option value="<?= e($c['slug']) ?>" <?= $cat===$c['slug']?'selected':'' ?>><?= e($c['name']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
 
 <div class="catalog-container">
     <div class="product-grid">
@@ -62,15 +72,6 @@ require __DIR__ . '/includes/header.php';
                 </div>
             </article>
         <?php endforeach; endif; ?>
-    </div>
-
-    <div class="filter-sidebar">
-        <select id="category-filter" name="cat" onchange="document.location='?cat='+this.value;" style="width: fit-content;">
-            <option value="">Все товары</option>
-            <?php foreach($categories as $c): ?>
-                <option value="<?= e($c['slug']) ?>" <?= $cat===$c['slug']?'selected':'' ?>><?= e($c['name']) ?></option>
-            <?php endforeach; ?>
-        </select>
     </div>
 </div>
 
