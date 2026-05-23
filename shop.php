@@ -79,3 +79,9 @@ require __DIR__ . '/includes/header.php';
     <?php for($i=1; $i<=$pages; $i++):
         $qs = http_build_query(array_merge($_GET, ['page'=>$i]));
     ?>
+        <a href="?<?= $qs ?>" class="<?= $i===$page?'active':'' ?>"><?= $i ?></a>
+    <?php endfor; ?>
+</nav>
+<?php endif; ?>
+
+<?php require __DIR__ . '/includes/footer.php'; ?>
