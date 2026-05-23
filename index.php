@@ -2,34 +2,37 @@
 // index.php
 require_once __DIR__ . '/includes/functions.php';
 
-$cat = $_GET['cat'] ?? '';
-$page = max(1, (int)($_GET['page'] ?? 1));
-$perPage = (int)(require __DIR__ . '/config.php')['items_per_page'];
-
-$where = ['p.active=1'];
-$params = [];
-if ($cat) { $where[] = 'c.slug=?'; $params[] = $cat; }
-
-$whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
-
-$total = db()->prepare("SELECT COUNT(*) FROM products p LEFT JOIN categories c ON p.category_id=c.id $whereSql");
-$total->execute($params);
-$total = (int)$total->fetchColumn();
-$pages = max(1, ceil($total / $perPage));
-
+// Получаем 3 последних добавленных товара
 $stmt = db()->prepare("
     SELECT p.*, c.name AS category_name
-    FROM products p LEFT JOIN categories c ON p.category_id=c.id
-    $whereSql
+    FROM products p 
+    LEFT JOIN categories c ON p.category_id=c.id
+    WHERE p.active=1
     ORDER BY p.created_at DESC
-    LIMIT ? OFFSET ?
+    LIMIT 3
 ");
-$stmt->execute(array_merge($params, [$perPage, ($page-1)*$perPage]));
-$products = $stmt->fetchAll();
+$stmt->execute();
+$new_products = $stmt->fetchAll();
 
-$categories = db()->query("SELECT * FROM categories ORDER BY name")->fetchAll();
+// Получаем 3 последних отзыва
+$reviews = db()->prepare("
+    SELECT 
+        r.id, 
+        r.comment AS text, 
+        r.rating, 
+        u.name AS author_name, 
+        p.name AS product_name
+    FROM reviews r
+    LEFT JOIN users u ON r.user_id=u.id
+    LEFT JOIN products p ON r.product_id=p.id
+    WHERE r.approved = 1  -- показываем только одобренные отзывы
+    ORDER BY r.created_at DESC
+    LIMIT 3
+");
+$reviews->execute();
+$reviews = $reviews->fetchAll();
 
-$pageTitle = 'Каталог свечей';
+$pageTitle = 'Главная страница';
 require __DIR__ . '/includes/header.php';
 ?>
 
@@ -38,11 +41,10 @@ require __DIR__ . '/includes/header.php';
   <p>Натуральный пчелиный воск. Ароматы, вдохновлённые природой.</p>
 </section>
 
-<div class="catalog-container">
+<section class="new-products">
+  <h2>Новинки</h2>
   <div class="product-grid">
-    <?php if(!$products): ?>
-      <p class="empty">Товары не найдены</p>
-    <?php else: foreach($products as $p): ?>
+    <?php foreach($new_products as $p): ?>
       <article class="product-card">
         <a href="/product.php?id=<?= $p['id'] ?>">
           <img src="<?= product_image($p['image']) ?>" alt="<?= e($p['name']) ?>" loading="lazy">
@@ -66,27 +68,24 @@ require __DIR__ . '/includes/header.php';
           </div>
         </div>
       </article>
-    <?php endforeach; endif; ?>
+    <?php endforeach; ?>
   </div>
+</section>
 
-  <div class="filter-sidebar">
-    <select id="category-filter" name="cat" onchange="document.location='?cat='+this.value;">
-      <option value="">Все категории</option>
-      <?php foreach($categories as $c): ?>
-        <option value="<?= e($c['slug']) ?>" <?= $cat===$c['slug']?'selected':'' ?>><?= e($c['name']) ?></option>
-      <?php endforeach; ?>
-    </select>
-  </div>
-</div>
-
-<?php if($pages > 1): ?>
-<nav class="pagination">
-  <?php for($i=1; $i<=$pages; $i++):
-    $qs = http_build_query(array_merge($_GET, ['page'=>$i]));
-  ?>
-    <a href="?<?= $qs ?>" class="<?= $i===$page?'active':'' ?>"><?= $i ?></a>
-  <?php endfor; ?>
-</nav>
-<?php endif; ?>
+<section class="reviews">
+  <h2>Отзывы покупателей</h2>
+  <?php foreach($reviews as $review): ?>
+    <div class="review-card">
+      <div class="review-header">
+        <h3><?= e($review['product_name']) ?></h3>
+        <div class="rating" style="width: <?= $review['rating'] * 20 ?>%"></div>
+      </div>
+      <p class="review-text"><?= e($review['text']) ?></p>
+      <div class="review-footer">
+        <span class="author"><?= e($review['author_name']) ?></span>
+      </div>
+    </div>
+  <?php endforeach; ?>
+</section>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>

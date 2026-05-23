@@ -18,7 +18,7 @@ $flash = flash();
   <div class="container header-inner">
     <a href="/" class="logo">🕯️ <?= e($shopName) ?></a>
     <nav class="main-nav">
-      <a href="/">Каталог</a>
+      <a href="/shop.php">Каталог</a>
       <a href="/cart.php">Корзина<?php if(cart_count()): ?><span class="badge"><?= cart_count() ?></span><?php endif; ?></a>
       <?php if($user): ?>
         <?php if($user['role'] !== 'admin'): ?>
