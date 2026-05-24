@@ -3,6 +3,20 @@
  * Репозиторий для работы с заказами
  */
 
+/**
+ * Получить заказы пользователя
+ * @param int $userId ID пользователя
+ * @return array Массив заказов
+ */
+if (!function_exists('get_orders_by_user')) {
+function get_orders_by_user($userId) {
+    $db = db_get();
+    $stmt = $db->prepare("SELECT * FROM orders WHERE user_id=? ORDER BY created_at DESC");
+    $stmt->execute([$userId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+}
+
 // Функции уже определены в includes/functions.php, здесь только уникальные функции репозитория
 
 /**

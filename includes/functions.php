@@ -143,34 +143,6 @@ function verify_password(string $password, string $hash): bool {
 }
 
 /**
- * Получить заказы пользователя
- */
-function get_orders_by_user(int $userId): array {
-    $stmt = db()->prepare("SELECT * FROM orders WHERE user_id=? ORDER BY created_at DESC");
-    $stmt->execute([$userId]);
-    return $stmt->fetchAll();
-}
-
-/**
- * Получить отзывы пользователя
- */
-function get_reviews_by_user(int $userId): array {
-    $stmt = db()->prepare("SELECT * FROM reviews WHERE user_id=? ORDER BY created_at DESC");
-    $stmt->execute([$userId]);
-    return $stmt->fetchAll();
-}
-
-/**
- * Получить товар по ID
- */
-function get_product_by_id(int $id): ?array {
-    $stmt = db()->prepare("SELECT * FROM products WHERE id=?");
-    $stmt->execute([$id]);
-    $result = $stmt->fetch();
-    return $result ?: null;
-}
-
-/**
  * Получить элементы заказа
  */
 function get_order_items(int $orderId): array {
