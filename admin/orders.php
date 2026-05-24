@@ -103,7 +103,7 @@ function render_orders_page($isMod = false, $viewId = null) {
 ?>
     <h1>Заказы</h1>
     <table class="admin-table">
-      <thead><tr><th>№</th><th>Клиент</th><th>Сумма</th><th>Статус</th><th>Оплата</th><th>Дата</th><th></th></tr></thead>
+      <thead><tr><th>№</th><th>Клиент</th><th>Сумма</th><th>Статус</th><th>Оплата</th><th>Дата</th><th>Действия</th></tr></thead>
       <tbody>
       <?php foreach($orders as $o): ?>
         <tr>

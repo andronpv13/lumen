@@ -281,11 +281,11 @@ elseif ($action === 'my_orders'):
       <p class="empty">У вас пока нет заказов.</p>
     <?php else: ?>
       <table class="admin-table">
-        <thead><tr><th>№</th><th>Дата</th><th>Сумма</th><th>Статус</th><th>Оплата</th><th></th></tr></thead>
+        <thead><tr><th>№</th><th>Дата</th><th>Сумма</th><th>Статус</th><th>Оплата</th><th>Действия</th></tr></thead>
         <tbody>
         <?php foreach ($myOrders as $o): ?>
           <tr>
-            <td>#<?= $o['id'] ?></td>
+            <td>№<?= $o['id'] ?></td>
             <td><?= date('d.m.Y', strtotime($o['created_at'])) ?></td>
             <td><?= money($o['total']) ?></td>
             <td><?= e($statusLabels[$o['status']] ?? $o['status']) ?></td>
@@ -302,7 +302,7 @@ elseif ($action === 'my_orders'):
         </tbody>
       </table>
     <?php endif; ?>
-
+<?php
 // ===== REVIEWS =====
 elseif ($action === 'reviews'):
     render_reviews_page($isMod);
@@ -314,6 +314,7 @@ elseif ($action === 'users' && !$isMod):
 // ===== SETTINGS =====
 elseif ($action === 'settings' && !$isMod):
     render_settings_page($isMod);
+?>
 
 <?php else: ?>
     <p>Раздел недоступен</p>
