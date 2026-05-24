@@ -7,7 +7,7 @@
  */
 if (!function_exists('get_order_by_id')) {
     function get_order_by_id($id) {
-        $db = db_get();
+        $db = db();
         $stmt = $db->prepare("SELECT * FROM orders WHERE id=?");
         $stmt->execute([$id]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -20,7 +20,7 @@ if (!function_exists('get_order_by_id')) {
  */
 if (!function_exists('get_order_items')) {
     function get_order_items($orderId) {
-        $db = db_get();
+        $db = db();
         $stmt = $db->prepare("SELECT * FROM order_items WHERE order_id=? ORDER BY id");
         $stmt->execute([$orderId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

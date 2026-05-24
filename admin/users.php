@@ -7,7 +7,7 @@ require_once __DIR__ . '/../includes/repositories/UserRepository.php';
  */
 if (!function_exists('get_user_by_id')) {
     function get_user_by_id($id) {
-        $db = db_get();
+        $db = db();
         $stmt = $db->prepare("SELECT * FROM users WHERE id=?");
         $stmt->execute([$id]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);

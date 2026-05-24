@@ -9,7 +9,7 @@
  * @return array|null Данные категории или null
  */
 function get_category_by_id($id) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("SELECT * FROM categories WHERE id=?");
     $stmt->execute([$id]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -21,7 +21,7 @@ function get_category_by_id($id) {
  * @return array Массив категорий
  */
 function get_all_categories() {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("SELECT c.*, COUNT(p.id) as products_count FROM categories c LEFT JOIN products p ON c.id=p.category_id GROUP BY c.id ORDER BY c.name");
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -33,7 +33,7 @@ function get_all_categories() {
  * @return int ID созданной категории
  */
 function create_category($data) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("INSERT INTO categories (name, description) VALUES (?, ?)");
     $stmt->execute([
         $data['name'],
@@ -49,7 +49,7 @@ function create_category($data) {
  * @return bool Успешность обновления
  */
 function update_category($id, $data) {
-    $db = db_get();
+    $db = db();
     $fields = [];
     $values = [];
 
@@ -76,7 +76,7 @@ function update_category($id, $data) {
  * @return bool Успешность удаления
  */
 function delete_category($id) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("DELETE FROM categories WHERE id=?");
     return $stmt->execute([$id]);
 }

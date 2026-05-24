@@ -8,7 +8,7 @@ if (!function_exists('setting')) {
     function setting($key, $default = '') {
         static $cache = null;
         if ($cache === null) {
-            $db = db_get();
+            $db = db();
             $rows = $db->query("SELECT `key`, `value` FROM settings")->fetchAll(PDO::FETCH_KEY_PAIR);
             $cache = $rows;
         }

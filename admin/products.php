@@ -8,7 +8,7 @@ require_once __DIR__ . '/../includes/repositories/CategoryRepository.php';
  */
 if (!function_exists('get_product_by_id')) {
     function get_product_by_id($id) {
-        $db = db_get();
+        $db = db();
         $stmt = $db->prepare("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id=c.id WHERE p.id=?");
         $stmt->execute([$id]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);

@@ -9,7 +9,7 @@
  * @return array Массив элементов корзины
  */
 function get_cart_items($userId) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("SELECT c.*, p.name, p.price, p.image FROM cart c JOIN products p ON c.product_id=p.id WHERE c.user_id=?");
     $stmt->execute([$userId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -23,7 +23,7 @@ function get_cart_items($userId) {
  * @return bool Успешность добавления
  */
 function add_to_cart($userId, $productId, $quantity = 1) {
-    $db = db_get();
+    $db = db();
 
     // Проверяем, есть ли уже такой товар в корзине
     $stmt = $db->prepare("SELECT * FROM cart WHERE user_id=? AND product_id=?");
@@ -49,7 +49,7 @@ function add_to_cart($userId, $productId, $quantity = 1) {
  * @return bool Успешность обновления
  */
 function update_cart_item($userId, $productId, $quantity) {
-    $db = db_get();
+    $db = db();
     if ($quantity <= 0) {
         return remove_from_cart($userId, $productId);
     }
@@ -64,7 +64,7 @@ function update_cart_item($userId, $productId, $quantity) {
  * @return bool Успешность удаления
  */
 function remove_from_cart($userId, $productId) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("DELETE FROM cart WHERE user_id=? AND product_id=?");
     return $stmt->execute([$userId, $productId]);
 }
@@ -75,7 +75,7 @@ function remove_from_cart($userId, $productId) {
  * @return bool Успешность очистки
  */
 function clear_cart($userId) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("DELETE FROM cart WHERE user_id=?");
     return $stmt->execute([$userId]);
 }
@@ -86,7 +86,7 @@ function clear_cart($userId) {
  * @return int Количество товаров
  */
 function get_cart_count($userId) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("SELECT COALESCE(SUM(quantity), 0) FROM cart WHERE user_id=?");
     $stmt->execute([$userId]);
     return (int)$stmt->fetchColumn();
@@ -98,7 +98,7 @@ function get_cart_count($userId) {
  * @return float Сумма корзины
  */
 function get_cart_total($userId) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("SELECT COALESCE(SUM(c.quantity * p.price), 0) FROM cart c JOIN products p ON c.product_id=p.id WHERE c.user_id=?");
     $stmt->execute([$userId]);
     return (float)$stmt->fetchColumn();

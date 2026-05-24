@@ -9,7 +9,7 @@
  * @return array Массив отзывов
  */
 function get_reviews_by_user($userId) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("SELECT r.*, p.name as product_name FROM reviews r JOIN products p ON r.product_id=p.id WHERE r.user_id=? ORDER BY r.created_at DESC");
     $stmt->execute([$userId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -21,7 +21,7 @@ function get_reviews_by_user($userId) {
  * @return array Массив отзывов
  */
 function get_reviews_by_product($productId) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("SELECT r.*, u.name as user_name FROM reviews r JOIN users u ON r.user_id=u.id WHERE r.product_id=? AND r.approved=1 ORDER BY r.created_at DESC");
     $stmt->execute([$productId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -33,7 +33,7 @@ function get_reviews_by_product($productId) {
  * @return array Массив отзывов
  */
 function get_all_reviews($approved = null) {
-    $db = db_get();
+    $db = db();
     if ($approved === null) {
         $stmt = $db->prepare("SELECT r.*, u.name as user_name, p.name as product_name FROM reviews r JOIN users u ON r.user_id=u.id JOIN products p ON r.product_id=p.id ORDER BY r.created_at DESC");
         $stmt->execute();
@@ -50,7 +50,7 @@ function get_all_reviews($approved = null) {
  * @return int ID созданного отзыва
  */
 function create_review($data) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("INSERT INTO reviews (user_id, product_id, rating, comment, approved) VALUES (?, ?, ?, ?, ?)");
     $stmt->execute([
         $data['user_id'],
@@ -69,7 +69,7 @@ function create_review($data) {
  * @return bool Успешность обновления
  */
 function update_review_approval($id, $approved) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("UPDATE reviews SET approved=?, updated_at=NOW() WHERE id=?");
     return $stmt->execute([$approved ? 1 : 0, $id]);
 }
@@ -80,7 +80,7 @@ function update_review_approval($id, $approved) {
  * @return bool Успешность удаления
  */
 function delete_review($id) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("DELETE FROM reviews WHERE id=?");
     return $stmt->execute([$id]);
 }
@@ -91,7 +91,7 @@ function delete_review($id) {
  * @return int Количество отзывов
  */
 function get_user_reviews_count($userId) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("SELECT COUNT(*) FROM reviews WHERE user_id=?");
     $stmt->execute([$userId]);
     return (int)$stmt->fetchColumn();

@@ -22,7 +22,7 @@ if (!function_exists('get_order_status_labels')) {
  * @param bool $isMod Является ли модератором
  */
 function render_admin_dashboard($user, $isMod = false) {
-    $db = db_get();
+    $db = db();
 
     // Статистика
     $stats = [

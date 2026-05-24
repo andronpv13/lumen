@@ -9,7 +9,7 @@
  * @return array|null Данные пользователя или null
  */
 function get_user_by_id($id) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("SELECT * FROM users WHERE id=?");
     $stmt->execute([$id]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -22,7 +22,7 @@ function get_user_by_id($id) {
  * @return array|null Данные пользователя или null
  */
 function get_user_by_email($email) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("SELECT * FROM users WHERE email=?");
     $stmt->execute([$email]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -34,7 +34,7 @@ function get_user_by_email($email) {
  * @return array Массив пользователей
  */
 function get_all_users() {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("SELECT * FROM users ORDER BY created_at DESC");
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -46,7 +46,7 @@ function get_all_users() {
  * @return int ID созданного пользователя
  */
 function create_user($data) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("INSERT INTO users (name, email, password, role, phone) VALUES (?, ?, ?, ?, ?)");
     $stmt->execute([
         $data['name'],
@@ -65,7 +65,7 @@ function create_user($data) {
  * @return bool Успешность обновления
  */
 function update_user($id, $data) {
-    $db = db_get();
+    $db = db();
     $fields = [];
     $values = [];
 
@@ -92,7 +92,7 @@ function update_user($id, $data) {
  * @return bool Успешность удаления
  */
 function delete_user($id) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("DELETE FROM users WHERE id=?");
     return $stmt->execute([$id]);
 }
@@ -103,7 +103,7 @@ function delete_user($id) {
  * @return int Количество заказов
  */
 function get_user_orders_count($userId) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("SELECT COUNT(*) FROM orders WHERE user_id=?");
     $stmt->execute([$userId]);
     return (int)$stmt->fetchColumn();

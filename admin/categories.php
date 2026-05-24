@@ -7,7 +7,7 @@ require_once __DIR__ . '/../includes/repositories/CategoryRepository.php';
  */
 if (!function_exists('get_category_by_id')) {
     function get_category_by_id($id) {
-        $db = db_get();
+        $db = db();
         $stmt = $db->prepare("SELECT c.*, (SELECT COUNT(*) FROM products WHERE category_id=c.id) as products_count FROM categories c WHERE c.id=?");
         $stmt->execute([$id]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);

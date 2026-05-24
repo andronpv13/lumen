@@ -8,7 +8,7 @@
  * @return array Массив товаров
  */
 function get_all_products() {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id=c.id ORDER BY p.created_at DESC");
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -23,7 +23,7 @@ function get_all_products() {
  * @return array ['products' => [...], 'total' => int]
  */
 function get_products_paginated($category = null, $search = null, $limit = 12, $offset = 0) {
-    $db = db_get();
+    $db = db();
     $where = [];
     $params = [];
 
@@ -61,7 +61,7 @@ function get_products_paginated($category = null, $search = null, $limit = 12, $
  * @return int ID созданного товара
  */
 function create_product($data) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("INSERT INTO products (name, description, price, image, aroma, stock, category_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
     $stmt->execute([
         $data['name'],
@@ -82,7 +82,7 @@ function create_product($data) {
  * @return bool Успешность обновления
  */
 function update_product($id, $data) {
-    $db = db_get();
+    $db = db();
     $fields = [];
     $values = [];
 
@@ -109,7 +109,7 @@ function update_product($id, $data) {
  * @return bool Успешность удаления
  */
 function delete_product($id) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("DELETE FROM products WHERE id=?");
     return $stmt->execute([$id]);
 }

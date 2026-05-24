@@ -10,7 +10,7 @@
  */
 if (!function_exists('get_orders_by_user')) {
 function get_orders_by_user($userId) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("SELECT * FROM orders WHERE user_id=? ORDER BY created_at DESC");
     $stmt->execute([$userId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -26,7 +26,7 @@ function get_orders_by_user($userId) {
  */
 if (!function_exists('get_order_by_id')) {
 function get_order_by_id($id) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("SELECT * FROM orders WHERE id=?");
     $stmt->execute([$id]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -41,7 +41,7 @@ function get_order_by_id($id) {
  */
 if (!function_exists('get_order_items')) {
 function get_order_items($orderId) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("SELECT oi.*, p.name, p.image FROM order_items oi JOIN products p ON oi.product_id=p.id WHERE oi.order_id=?");
     $stmt->execute([$orderId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -55,7 +55,7 @@ function get_order_items($orderId) {
  */
 if (!function_exists('get_all_orders')) {
 function get_all_orders($status = null) {
-    $db = db_get();
+    $db = db();
     if ($status) {
         $stmt = $db->prepare("SELECT o.*, u.name as user_name, u.email as user_email FROM orders o JOIN users u ON o.user_id=u.id WHERE o.status=? ORDER BY o.created_at DESC");
         $stmt->execute([$status]);
@@ -75,7 +75,7 @@ function get_all_orders($status = null) {
  */
 if (!function_exists('update_order_status')) {
 function update_order_status($id, $status) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("UPDATE orders SET status=?, updated_at=NOW() WHERE id=?");
     return $stmt->execute([$status, $id]);
 }
@@ -89,7 +89,7 @@ function update_order_status($id, $status) {
  */
 if (!function_exists('update_order_payment_status')) {
 function update_order_payment_status($id, $paymentStatus) {
-    $db = db_get();
+    $db = db();
     $stmt = $db->prepare("UPDATE orders SET payment_status=?, updated_at=NOW() WHERE id=?");
     return $stmt->execute([$paymentStatus, $id]);
 }
