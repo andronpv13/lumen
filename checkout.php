@@ -10,6 +10,29 @@ $total = cart_total();
 $delivery = (float)setting('delivery_price', 0);
 $user = current_user();
 
+// Загрузка профиля доставки
+$deliveryProfile = null;
+$stmt = db()->prepare("SELECT * FROM user_delivery_profiles WHERE user_id=?");
+$stmt->execute([$user['id']]);
+$deliveryProfile = $stmt->fetch() ?: null;
+
+// Формирование полного адреса из полей профиля
+$fullAddress = '';
+if ($deliveryProfile) {
+    $parts = [];
+    if ($deliveryProfile['postal_code']) $parts[] = $deliveryProfile['postal_code'];
+    if ($deliveryProfile['region']) $parts[] = $deliveryProfile['region'];
+    if ($deliveryProfile['district']) $parts[] = $deliveryProfile['district'];
+    if ($deliveryProfile['city']) $parts[] = $deliveryProfile['city'];
+    if ($deliveryProfile['street']) $parts[] = $deliveryProfile['street'];
+    if ($deliveryProfile['building']) {
+        $building = $deliveryProfile['building'];
+        if ($deliveryProfile['apartment']) $building .= ', кв. ' . $deliveryProfile['apartment'];
+        $parts[] = $building;
+    }
+    $fullAddress = implode(', ', $parts);
+}
+
 $payment = 'card';
 if ($_SERVER['REQUEST_METHOD']==='POST') {
     csrf_check();
@@ -56,13 +79,13 @@ require __DIR__ . '/includes/header.php';
     <input type="hidden" name="csrf" value="<?php echo csrf_token(); ?>">
     <h2>Данные доставки</h2>
     <label>Имя получателя *
-      <input type="text" name="name" value="<?php echo e($user['name']); ?>" required>
+      <input type="text" name="name" value="<?php echo e($deliveryProfile['first_name'] ?? $user['name']); ?>" required>
     </label>
     <label>Телефон *
       <input type="tel" name="phone" value="<?php echo e($user['phone'] ?? ''); ?>" required>
     </label>
     <label>Адрес доставки *
-      <textarea name="address" required><?php echo e($user['address'] ?? ''); ?></textarea>
+      <textarea name="address" required><?php echo e($fullAddress ?: $user['address'] ?? ''); ?></textarea>
     </label>
     <label>Комментарий к заказу
       <textarea name="notes"></textarea>

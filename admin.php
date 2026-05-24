@@ -458,10 +458,10 @@ elseif ($action === 'account'):
     <form method="post" class="admin-form">
       <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
       <input type="hidden" name="action" value="save_profile">
-      <label>Имя <input type="text" name="name" value="<?= e($profile['name']) ?>" required></label>
+      <label>Логин <input type="text" name="name" value="<?= e($profile['name']) ?>" required></label>
       <label>Email <input type="email" name="email" value="<?= e($profile['email']) ?>" required></label>
       <label>Телефон <input type="tel" name="phone" value="<?= e($profile['phone'] ?? '') ?>"></label>
-      <label>Адрес доставки <textarea name="address"><?= e($profile['address'] ?? '') ?></textarea></label>
+      <label>Наш адрес <textarea name="address"><?= e($profile['address'] ?? '') ?></textarea></label>
       <label>Текущий пароль (требуется для смены пароля) <input type="password" name="current_password" placeholder="Оставьте пустым, если не меняете пароль"></label>
       <label>Новый пароль <input type="password" name="password" placeholder="Оставьте пустым, чтобы не менять"></label>
       <button class="btn btn-primary">Сохранить профиль</button>

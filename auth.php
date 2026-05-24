@@ -38,9 +38,15 @@ if ($_SERVER['REQUEST_METHOD']==='GET' && isset($_GET['check'])) {
 if ($_SERVER['REQUEST_METHOD']==='POST') {
     csrf_check();
     if (($_POST['mode'] ?? '') === 'login') {
-        $email = trim($_POST['email']);
-        $stmt = db()->prepare("SELECT * FROM users WHERE email=?");
-        $stmt->execute([$email]);
+        $identifier = trim($_POST['identifier']);
+        // Определяем, что введено: email или логин
+        if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+            $stmt = db()->prepare("SELECT * FROM users WHERE email=?");
+            $stmt->execute([$identifier]);
+        } else {
+            $stmt = db()->prepare("SELECT * FROM users WHERE name=?");
+            $stmt->execute([$identifier]);
+        }
         $u = $stmt->fetch();
         if ($u && password_verify($_POST['password'], $u['password'])) {
             unset($u['password']);
@@ -48,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
             flash('Добро пожаловать, '. $u['name'] .'!','success');
             redirect('/');
         } else {
-            flash('Неверный email или пароль','error');
+            flash('Неверный логин/email или пароль','error');
         }
     } else {
         $email = trim($_POST['email']);
@@ -98,7 +104,7 @@ require __DIR__ . '/includes/header.php';
     <form method="post" class="auth-form">
       <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
       <input type="hidden" name="mode" value="login">
-      <label>Email <input type="email" name="email" required></label>
+      <label>Логин или Email <input type="text" name="identifier" required></label>
       <label>Пароль <input type="password" name="password" required></label>
       <button class="btn btn-primary">Войти</button>
       <p class="muted small">Тест: admin@lumen.ru / admin123</p>
