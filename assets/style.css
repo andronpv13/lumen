@@ -142,7 +142,8 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .field-label{font-weight:600;color:var(--text)}
 .field-input-wrap{position:relative}
 .field-input-wrap input{width:100%;padding-right:40px}
-.field-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);border:none;background:none;padding:0;font-size:1.1rem;cursor:pointer;color:var(--muted)}
+.field-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);border:none;background:none;padding:0;font-size:1.1rem;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.field-toggle svg{width:20px;height:20px;display:block}
 .field-hint{margin-top:6px;font-size:.85rem;color:var(--muted);min-height:18px}
 .input-valid{border-color:#2d7a4f;background:rgba(45,122,79,.08)}
 .input-invalid{border-color:#b33a3a;background:rgba(179,58,58,.08)}

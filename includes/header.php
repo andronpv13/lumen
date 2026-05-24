@@ -18,7 +18,7 @@ $flash = flash();
   <div class="container header-inner">
     <a href="/" class="logo">🕯️ <?= e($shopName) ?></a>
     <nav class="main-nav">
-      <a href="/shop.php" title="Каталог"> 📃 </a>
+      <a href="/shop.php" title="Каталог"><span class="emoji">📃</span></a>
       <a href="/cart.php" title="Корзина"><span class="emoji">🛒</span><?php if(cart_count()): ?><span class="badge"><?= cart_count() ?></span><?php endif; ?></a>
       <?php if($user): ?>
         <?php if($user['role'] !== 'admin'): ?>
@@ -30,7 +30,7 @@ $flash = flash();
         <span class="user-hello"><?= e($user['name']) ?></span>
         <a href="/logout.php" title="Выход"><span class="emoji">🚪</span></a>
       <?php else: ?>
-        <a href="/auth.php" title="Вход"><span class="emoji">🚪</span></a>
+        <a href="/auth.php" title="Вход/регистрация"><span class="emoji">🚪</span></a>
       <?php endif; ?>
     </nav>
     <button class="burger" aria-label="Меню">☰</button>
