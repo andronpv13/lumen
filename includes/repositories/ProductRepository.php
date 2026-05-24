@@ -4,19 +4,6 @@
  */
 
 /**
- * Получить товар по ID
- * @param int $id ID товара
- * @return array|null Данные товара или null
- */
-function get_product_by_id($id) {
-    $db = db_get();
-    $stmt = $db->prepare("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id=c.id WHERE p.id=?");
-    $stmt->execute([$id]);
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $result ?: null;
-}
-
-/**
  * Получить все товары (для админки)
  * @return array Массив товаров
  */

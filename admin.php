@@ -1,11 +1,21 @@
 <?php
-// admin.php
+// admin.php - Модернизированная панель управления с модульной архитектурой
 require_once __DIR__ . '/includes/functions.php';
 require_role(['admin','moderator']);
 $user = current_user();
 $isMod = $user['role'] === 'moderator';
 
+// Подключение модулей из папки admin/
+require_once __DIR__ . '/admin/dashboard.php';
+require_once __DIR__ . '/admin/products.php';
+require_once __DIR__ . '/admin/orders.php';
+require_once __DIR__ . '/admin/categories.php';
+require_once __DIR__ . '/admin/users.php';
+require_once __DIR__ . '/admin/reviews.php';
+require_once __DIR__ . '/admin/settings.php';
+
 $action = $_GET['action'] ?? 'dashboard';
+$viewId = isset($_GET['id']) ? $_GET['id'] : null;
 
 // POST-обработчики
 if ($_SERVER['REQUEST_METHOD']==='POST') {
@@ -226,221 +236,20 @@ require __DIR__ . '/includes/header.php';
 <?php
 // ===== DASHBOARD =====
 if ($action === 'dashboard'):
-    $stats = [
-        'products' => db()->query("SELECT COUNT(*) FROM products")->fetchColumn(),
-        'orders' => db()->query("SELECT COUNT(*) FROM orders")->fetchColumn(),
-        'revenue' => db()->query("SELECT COALESCE(SUM(total),0) FROM orders WHERE payment_status='paid'")->fetchColumn(),
-        'users' => db()->query("SELECT COUNT(*) FROM users")->fetchColumn(),
-        'pending_reviews' => db()->query("SELECT COUNT(*) FROM reviews WHERE approved=0")->fetchColumn(),
-    ];
-    $recent = db()->query("SELECT o.*, u.name FROM orders o LEFT JOIN users u ON o.user_id=u.id ORDER BY o.created_at DESC LIMIT 5")->fetchAll();
-    $statusLabels = get_order_status_labels();
-?>
-    <h1>Дашборд</h1>
-    <div class="stats-grid">
-      <div class="stat"><h3><?= $stats['products'] ?></h3><p>Товаров</p></div>
-      <div class="stat"><h3><?= $stats['orders'] ?></h3><p>Заказов</p></div>
-      <div class="stat"><h3><?= money($stats['revenue']) ?></h3><p>Выручка</p></div>
-      <div class="stat"><h3><?= $stats['users'] ?></h3><p>Пользователей</p></div>
-      <div class="stat"><h3><?= $stats['pending_reviews'] ?></h3><p>Отзывов на модерации</p></div>
-    </div>
-    <h2>Последние заказы</h2>
-    <table class="admin-table">
-      <thead><tr><th>№</th><th>Клиент</th><th>Сумма</th><th>Статус</th><th>Дата</th></tr></thead>
-      <tbody>
-      <?php foreach($recent as $o): ?>
-        <tr><td>#<?= $o['id'] ?></td><td><?= e($o['name'] ?? 'Гость') ?></td><td><?= money($o['total']) ?></td><td><?= e($statusLabels[$o['status']] ?? $o['status']) ?></td><td><?= date('d.m.Y', strtotime($o['created_at'])) ?></td></tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
+    render_admin_dashboard($user, $isMod);
 
-<?php
 // ===== PRODUCTS =====
 elseif ($action === 'products'):
-    $products = db()->query("SELECT p.*, c.name AS cat FROM products p LEFT JOIN categories c ON p.category_id=c.id ORDER BY p.created_at DESC")->fetchAll();
-    $categories = db()->query("SELECT * FROM categories ORDER BY name")->fetchAll();
-    $editId = (int)($_GET['id'] ?? 0);
-    $edit = null;
-    if ($editId) {
-        $s = db()->prepare("SELECT * FROM products WHERE id=?");
-        $s->execute([$editId]); $edit = $s->fetch();
-    }
-?>
-    <h1>Товары</h1>
-    <a href="?action=products&id=new" class="btn btn-primary">+ Добавить</a>
-    <?php if($edit || isset($_GET['id'])): ?>
-      <form method="post" enctype="multipart/form-data" class="admin-form">
-        <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
-        <input type="hidden" name="action" value="product_save">
-        <input type="hidden" name="id" value="<?= $edit['id'] ?? 0 ?>">
-        <input type="hidden" name="image_current" value="<?= e($edit['image'] ?? '') ?>">
-        <label>Название <input type="text" name="name" value="<?= e($edit['name'] ?? '') ?>" required></label>
-        <label>Категория
-          <select name="category_id">
-            <option value="">—</option>
-            <?php foreach($categories as $c): ?>
-              <option value="<?= $c['id'] ?>" <?= ($edit['category_id']??0)==$c['id']?'selected':'' ?>><?= e($c['name']) ?></option>
-            <?php endforeach; ?>
-          </select>
-        </label>
-        <label>Цена <input type="number" step="0.01" name="price" value="<?= $edit['price'] ?? 0 ?>" required></label>
-        <label>Остаток <input type="number" name="stock" value="<?= $edit['stock'] ?? 0 ?>"></label>
-        <label>Аромат <input type="text" name="aroma" value="<?= e($edit['aroma'] ?? '') ?>"></label>
-        <label>Вес (г) <input type="number" name="weight" value="<?= $edit['weight'] ?? 0 ?>"></label>
-        <label>Описание <textarea name="description" rows="4"><?= e($edit['description'] ?? '') ?></textarea></label>
-        <label>Изображение <input type="file" name="image" accept="image/*">
-          <?php if(!empty($edit['image'])): ?><br><img src="<?= product_image($edit['image']) ?>" style="max-width:120px;margin-top:8px"><?php endif; ?>
-        </label>
-        <label class="checkbox"><input type="checkbox" name="active" <?= ($edit['active'] ?? 1)?'checked':'' ?>> Активен</label>
-        <button class="btn btn-primary">Сохранить</button>
-        <a href="?action=products" class="btn btn-ghost">Отмена</a>
-      </form>
-    <?php endif; ?>
+    render_products_page($isMod, $_GET['id'] ?? null);
 
-    <table class="admin-table">
-      <thead><tr><th>ИЗО</th><th>Название</th><th>Категория</th><th>Цена</th><th>Остаток</th><th>Статус</th><th></th></tr></thead>
-      <tbody>
-      <?php foreach($products as $p): ?>
-        <tr>
-          <td><img src="<?= product_image($p['image']) ?>" style="width:50px;height:50px;object-fit:cover;border-radius:6px"></td>
-          <td><?= e($p['name']) ?></td>
-          <td><?= e($p['cat']) ?></td>
-          <td><?= money($p['price']) ?></td>
-          <td><?= $p['stock'] ?></td>
-          <td><?= $p['active']?'✅':'⏸️' ?></td>
-          <td>
-            <a href="?action=products&id=<?= $p['id'] ?>" class="btn btn-sm btn-ghost">✏️</a>
-            <?php if(!$isMod): ?>
-            <form method="post" style="display:inline" onsubmit="return confirm('Удалить?')">
-              <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
-              <input type="hidden" name="action" value="product_delete">
-              <input type="hidden" name="id" value="<?= $p['id'] ?>">
-              <button class="btn btn-sm btn-ghost">🗑️</button>
-            </form>
-            <?php endif; ?>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
-
-<?php
 // ===== CATEGORIES =====
 elseif ($action === 'categories' && !$isMod):
-    $cats = db()->query("SELECT * FROM categories ORDER BY name")->fetchAll();
-    $editId = (int)($_GET['id'] ?? 0);
-    $edit = $editId ? db()->prepare("SELECT * FROM categories WHERE id=?")->execute([$editId]) && ($edit = db()->prepare("SELECT * FROM categories WHERE id=?")) ? (function()use($editId){$s=db()->prepare("SELECT * FROM categories WHERE id=?");$s->execute([$editId]);return $s->fetch();})() : null : null;
-?>
-    <h1>Категории</h1>
-    <form method="post" class="admin-form inline">
-      <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
-      <input type="hidden" name="action" value="category_save">
-      <input type="hidden" name="id" value="<?= $edit['id'] ?? 0 ?>">
-      <input type="text" name="name" placeholder="Название для категории" value="<?= e($edit['name'] ?? '') ?>" required>
-      <input type="text" name="slug" placeholder="Идентификатор писать латиницей" value="<?= e($edit['slug'] ?? '') ?>" required>
-      <button class="btn btn-primary">Сохранить</button>
-    </form>
-    <table class="admin-table">
-      <thead><tr><th>ID</th><th>Название</th><th>Идентификатор</th><th></th></tr></thead>
-      <tbody>
-      <?php foreach($cats as $c): ?>
-        <tr>
-          <td><?= $c['id'] ?></td><td><?= e($c['name']) ?></td><td><?= e($c['slug']) ?></td>
-          <td>
-            <a href="?action=categories&id=<?= $c['id'] ?>" class="btn btn-sm btn-ghost">✏️</a>
-            <form method="post" style="display:inline" onsubmit="return confirm('Удалить?')">
-              <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
-              <input type="hidden" name="action" value="category_delete">
-              <input type="hidden" name="id" value="<?= $c['id'] ?>">
-              <button class="btn btn-sm btn-ghost">🗑️</button>
-            </form>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
+    render_categories_page($isMod, $_GET['id'] ?? null);
 
-<?php
 // ===== ORDERS =====
 elseif ($action === 'orders'):
-    $statusLabels = get_order_status_labels();
-    $paymentStatusLabels = [
-        'pending' => 'Обработка',
-        'paid' => 'Оплачен',
-        'failed' => 'Отменён',
-    ];
-    $orders = db()->query("SELECT o.*, u.name AS uname FROM orders o LEFT JOIN users u ON o.user_id=u.id ORDER BY o.created_at DESC")->fetchAll();
-    $viewId = (int)($_GET['id'] ?? 0);
-    $view = $viewItems = null;
-    if ($viewId) {
-        $s = db()->prepare("SELECT o.*, u.name AS uname FROM orders o LEFT JOIN users u ON o.user_id=u.id WHERE o.id=?");
-        $s->execute([$viewId]); $view = $s->fetch();
-        $s = db()->prepare("SELECT * FROM order_items WHERE order_id=?");
-        $s->execute([$viewId]); $viewItems = $s->fetchAll();
-    }
-?>
-    <h1>Заказы</h1>
-    <?php if($view): ?>
-      <a href="?action=orders">← Все заказы</a>
-      <h2>Заказ #<?= $view['id'] ?></h2>
-      <p><strong>Клиент:</strong> <?= e($view['uname']) ?></p>
-      <p><strong>Получатель:</strong> <?= e($view['shipping_name']) ?>, <?= e($view['shipping_phone']) ?></p>
-      <p><strong>Адрес:</strong> <?= e($view['shipping_address']) ?></p>
-      <?php if($view['notes']): ?><p><strong>Примечания:</strong> <?= e($view['notes']) ?></p><?php endif; ?>
-      <form method="post" class="admin-form inline">
-        <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
-        <input type="hidden" name="action" value="order_update">
-        <input type="hidden" name="id" value="<?= $view['id'] ?>">
-        <select name="status">
-          <?php foreach($statusLabels as $value => $label): ?>
-            <option value="<?= $value ?>" <?= $view['status'] === $value ? 'selected' : '' ?>><?= $label ?></option>
-          <?php endforeach; ?>
-        </select>
-        <select name="payment_status">
-          <?php foreach($paymentStatusLabels as $value => $label): ?>
-            <option value="<?= $value ?>" <?= $view['payment_status'] === $value ? 'selected' : '' ?>><?= $label ?></option>
-          <?php endforeach; ?>
-        </select>
-        <button class="btn btn-primary">Обновить</button>
-      </form>
-      <table class="admin-table">
-        <thead><tr><th>Товар</th><th>Цена</th><th>Кол-во</th><th>Сумма</th></tr></thead>
-        <tbody>
-        <?php foreach($viewItems as $it): ?>
-          <tr><td><?= e($it['name']) ?></td><td><?= money($it['price']) ?></td><td><?= $it['quantity'] ?></td><td><?= money($it['price']*$it['quantity']) ?></td></tr>
-        <?php endforeach; ?>
-        <tfoot><tr><td colspan="3"><strong>Итого</strong></td><td><strong><?= money($view['total']) ?></strong></td></tr></tfoot>
-        </tbody>
-      </table>
-    <?php else: ?>
-      <table class="admin-table">
-        <thead><tr><th>№</th><th>Клиент</th><th>Сумма</th><th>Статус</th><th>Оплата</th><th>Дата</th><th></th></tr></thead>
-        <tbody>
-        <?php foreach($orders as $o): ?>
-          <tr>
-            <td>#<?= $o['id'] ?></td>
-            <td><?= e($o['uname'] ?? 'Гость') ?></td>
-            <td><?= money($o['total']) ?></td>
-            <td><?= e($statusLabels[$o['status']] ?? $o['status']) ?></td>
-            <td><?= e($paymentStatusLabels[$o['payment_status']] ?? $o['payment_status']) ?></td>
-            <td><?= date('d.m.Y', strtotime($o['created_at'])) ?></td>
-            <td>
-              <a href="?action=orders&id=<?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a>
-              <?php if(!$isMod): ?>
-              <form method="post" style="display:inline" onsubmit="return confirm('Удалить?')">
-                <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
-                <input type="hidden" name="action" value="order_delete">
-                <input type="hidden" name="id" value="<?= $o['id'] ?>">
-                <button class="btn btn-sm btn-ghost">🗑️</button>
-              </form>
-              <?php endif; ?>
-            </td>
-          </tr>
-        <?php endforeach; ?>
-        </tbody>
-      </table>
-    <?php endif; ?>
-<?php
+    render_orders_page($isMod, isset($_GET['id']) ? (int)$_GET['id'] : null);
+
 // ===== ACCOUNT =====
 elseif ($action === 'account'):
     $profileStmt = db()->prepare("SELECT * FROM users WHERE id=?");
@@ -460,9 +269,10 @@ elseif ($action === 'account'):
       </div>
       <button class="btn btn-primary">Сохранить профиль</button>
     </form>
-<?php
+
 // ===== MY ORDERS =====
 elseif ($action === 'my_orders'):
+    $statusLabels = get_order_status_labels();
     $myOrders = get_orders_by_user($user['id']);
 ?>
     <h1>Мои заказы</h1>
@@ -491,123 +301,19 @@ elseif ($action === 'my_orders'):
         </tbody>
       </table>
     <?php endif; ?>
-<?php
+
 // ===== REVIEWS =====
 elseif ($action === 'reviews'):
-    $reviews = db()->query("SELECT r.*, u.name AS uname, p.name AS pname FROM reviews r LEFT JOIN users u ON r.user_id=u.id LEFT JOIN products p ON r.product_id=p.id ORDER BY r.approved, r.created_at DESC")->fetchAll();
-?>
-    <h1>Отзывы</h1>
-    <table class="admin-table">
-      <thead><tr><th>Товар</th><th>Автор</th><th>Оценка</th><th>Текст</th><th>Статус</th><th></th></tr></thead>
-      <tbody>
-      <?php foreach($reviews as $r): ?>
-        <tr>
-          <td><?= e($r['pname']) ?></td>
-          <td><?= e($r['uname']) ?></td>
-          <td><?= str_repeat('★', $r['rating']) ?></td>
-          <td><?= e(mb_substr($r['comment'], 0, 80)) ?></td>
-          <td><?= $r['approved']?'✅':'⏳' ?></td>
-          <td>
-            <?php if(!$r['approved']): ?>
-            <form method="post" style="display:inline">
-              <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
-              <input type="hidden" name="action" value="review_approve">
-              <input type="hidden" name="id" value="<?= $r['id'] ?>">
-              <button class="btn btn-sm btn-primary">Одобрить</button>
-            </form>
-            <?php endif; ?>
-            <form method="post" style="display:inline" onsubmit="return confirm('Удалить?')">
-              <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
-              <input type="hidden" name="action" value="review_delete">
-              <input type="hidden" name="id" value="<?= $r['id'] ?>">
-              <button class="btn btn-sm btn-ghost">🗑️</button>
-            </form>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
+    render_reviews_page($isMod);
 
-<?php
 // ===== USERS =====
 elseif ($action === 'users' && !$isMod):
-    $users = db()->query("SELECT * FROM users ORDER BY created_at DESC")->fetchAll();
-    $editId = (int)($_GET['id'] ?? 0);
-    $edit = null;
-    if ($editId) {
-        $s = db()->prepare("SELECT * FROM users WHERE id=?");
-        $s->execute([$editId]); $edit = $s->fetch();
-    }
-?>
-    <h1>Пользователи</h1>
-    <?php if($edit || isset($_GET['id'])): ?>
-      <form method="post" class="admin-form">
-        <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
-        <input type="hidden" name="action" value="user_save">
-        <input type="hidden" name="id" value="<?= $edit['id'] ?? 0 ?>">
-        <label>Имя <input type="text" name="name" value="<?= e($edit['name'] ?? '') ?>" required></label>
-        <label>Email <input type="email" name="email" value="<?= e($edit['email'] ?? '') ?>" required></label>
-        <label>Телефон <input type="text" name="phone" value="<?= e($edit['phone'] ?? '') ?>"></label>
-        <label>Роль
-          <select name="role">
-            <?php foreach(['customer','moderator','admin'] as $r): ?>
-              <option value="<?= $r ?>" <?= ($edit['role']??'customer')===$r?'selected':'' ?>><?= $r ?></option>
-            <?php endforeach; ?>
-          </select>
-        </label>
-        <label>Пароль <?= $edit?'(оставьте пустым, чтобы не менять)':'<input type="password" name="password" required>' ?>
-          <?php if($edit): ?><input type="password" name="password"><?php endif; ?>
-        </label>
-        <button class="btn btn-primary">Сохранить</button>
-        <a href="?action=users" class="btn btn-ghost">Отмена</a>
-      </form>
-    <?php endif; ?>
-    <table class="admin-table">
-      <thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th>Дата</th><th></th></tr></thead>
-      <tbody>
-      <?php foreach($users as $u): ?>
-        <tr>
-          <td><?= $u['id'] ?></td>
-          <td><?= e($u['name']) ?></td>
-          <td><?= e($u['email']) ?></td>
-          <td><?= e($u['role']) ?></td>
-          <td><?= date('d.m.Y', strtotime($u['created_at'])) ?></td>
-          <td>
-            <a href="?action=users&id=<?= $u['id'] ?>" class="btn btn-sm btn-ghost">✏️</a>
-            <?php if($u['id']!=$user['id']): ?>
-            <form method="post" style="display:inline" onsubmit="return confirm('Удалить?')">
-              <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
-              <input type="hidden" name="action" value="user_delete">
-              <input type="hidden" name="id" value="<?= $u['id'] ?>">
-              <button class="btn btn-sm btn-ghost">🗑️</button>
-            </form>
-            <?php endif; ?>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
+    render_users_page($isMod, $_GET['id'] ?? null);
 
-<?php
 // ===== SETTINGS =====
 elseif ($action === 'settings' && !$isMod):
-?>
-    <h1>Настройки магазина</h1>
-    <form method="post" class="admin-form">
-      <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
-      <input type="hidden" name="action" value="settings_save">
-      <label>Название магазина <input type="text" name="shop_name" value="<?= e(setting('shop_name')) ?>"></label>
-      <label>Телефон магазина <input type="text" name="shop_phone" value="<?= e(setting('shop_phone')) ?>"></label>
-      <label>Email магазина <input type="email" name="shop_email" value="<?= e(setting('shop_email')) ?>"></label>
-      <?php if(!$isMod): ?>
-      <label>Адрес магазина <input type="text" name="shop_address" value="<?= e(setting('shop_address')) ?>"></label>
-      <?php endif; ?>
-      <div class="form-row">
-        <label>Стоимость доставки до транспортной <input type="number" step="0.01" name="delivery_price" value="<?= e(setting('delivery_price')) ?>"></label>
-        <label>Валюта <input type="text" name="currency" value="<?= e(setting('currency')) ?>"></label>
-      </div>
-      <button class="btn btn-primary">Сохранить</button>
-    </form>
+    render_settings_page($isMod);
+
 <?php else: ?>
     <p>Раздел недоступен</p>
 <?php endif; ?>

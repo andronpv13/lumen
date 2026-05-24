@@ -1,7 +1,46 @@
 <?php
 // admin/orders.php - Управление заказами
-require_once __DIR__ . '/../includes/functions.php';
-require_once __DIR__ . '/../includes/repositories/OrderRepository.php';
+// Все необходимые функции уже загружены в admin.php через functions.php
+
+/**
+ * Получить заказ по ID (если не загружен из functions.php)
+ */
+if (!function_exists('get_order_by_id')) {
+    function get_order_by_id($id) {
+        $db = db_get();
+        $stmt = $db->prepare("SELECT * FROM orders WHERE id=?");
+        $stmt->execute([$id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
+    }
+}
+
+/**
+ * Получить элементы заказа (если не загружен из functions.php)
+ */
+if (!function_exists('get_order_items')) {
+    function get_order_items($orderId) {
+        $db = db_get();
+        $stmt = $db->prepare("SELECT * FROM order_items WHERE order_id=? ORDER BY id");
+        $stmt->execute([$orderId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+}
+
+/**
+ * Получить метки статусов заказов (если не загружен из functions.php)
+ */
+if (!function_exists('get_order_status_labels')) {
+    function get_order_status_labels() {
+        return [
+            'new' => 'Новый',
+            'processing' => 'В обработке',
+            'shipped' => 'Отправлен',
+            'delivered' => 'Доставлен',
+            'cancelled' => 'Отменён',
+        ];
+    }
+}
 
 /**
  * Отобразить страницу управления заказами
