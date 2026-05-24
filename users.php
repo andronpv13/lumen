@@ -173,8 +173,10 @@ require __DIR__ . '/includes/header.php';
       <label>Email <input type="email" name="email" value="<?= e($user['email']) ?>" required></label>
       <label>Телефон <input type="tel" name="phone" value="<?= e($user['phone'] ?? '') ?>"></label>
       <label>Адрес доставки <textarea name="address"><?= e($user['address'] ?? '') ?></textarea></label>
-      <label>Текущий пароль (требуется для смены пароля) <input type="password" name="current_password" placeholder="Оставьте пустым, если не меняете пароль"></label>
-      <label>Новый пароль <input type="password" name="password" placeholder="Оставьте пустым, чтобы не менять"></label>
+      <div class="password-row">
+        <label>Текущий пароль <input type="password" name="current_password" placeholder="Оставьте пустым, если не меняете пароль"></label>
+        <label>Новый пароль <input type="password" name="password" placeholder="Оставьте пустым, чтобы не менять"></label>
+      </div>
       <button class="btn btn-primary">Сохранить профиль</button>
     </form>
 

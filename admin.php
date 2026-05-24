@@ -212,7 +212,7 @@ require __DIR__ . '/includes/header.php';
         <a href="?action=my_orders" class="<?= $action==='my_orders'?'active':'' ?>">🧾 Мои заказы</a>
       <a href="?action=products" class="<?= $action==='products'?'active':'' ?>">🕯️ Товары</a>
       <?php if(!$isMod): ?><a href="?action=categories" class="<?= $action==='categories'?'active':'' ?>">📂 Категории</a><?php endif; ?>
-      <a href="?action=orders" class="<?= $action==='orders'?'active':'' ?>">📦 Заказы</a> 
+      <a href="?action=orders" class="<?= $action==='orders'?'active':'' ?>">📦 Заказы</a>
       <a href="?action=reviews" class="<?= $action==='reviews'?'active':'' ?>">⭐ Отзывы</a>
       <?php if(!$isMod): ?>
         <a href="?action=users" class="<?= $action==='users'?'active':'' ?>">👥 Пользователи</a>
@@ -462,8 +462,10 @@ elseif ($action === 'account'):
       <label>Email <input type="email" name="email" value="<?= e($profile['email']) ?>" required></label>
       <label>Телефон <input type="tel" name="phone" value="<?= e($profile['phone'] ?? '') ?>"></label>
       <label>Наш адрес <textarea name="address"><?= e($profile['address'] ?? '') ?></textarea></label>
-      <label>Текущий пароль (требуется для смены пароля) <input type="password" name="current_password" placeholder="Оставьте пустым, если не меняете пароль"></label>
-      <label>Новый пароль <input type="password" name="password" placeholder="Оставьте пустым, чтобы не менять"></label>
+      <div class="password-row">
+        <label>Текущий пароль <input type="password" name="current_password" placeholder="Оставьте пустым, если не меняете пароль"></label>
+        <label>Новый пароль <input type="password" name="password" placeholder="Оставьте пустым, чтобы не менять"></label>
+      </div>
       <button class="btn btn-primary">Сохранить профиль</button>
     </form>
 <?php
@@ -606,11 +608,11 @@ elseif ($action === 'settings' && !$isMod):
       <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
       <input type="hidden" name="action" value="settings_save">
       <label>Название магазина <input type="text" name="shop_name" value="<?= e(setting('shop_name')) ?>"></label>
-      <label>Телефон <input type="text" name="shop_phone" value="<?= e(setting('shop_phone')) ?>"></label>
-      <label>Email <input type="email" name="shop_email" value="<?= e(setting('shop_email')) ?>"></label>
-      <label>Адрес <input type="text" name="shop_address" value="<?= e(setting('shop_address')) ?>"></label>
+      <label>Телефон магазина <input type="text" name="shop_phone" value="<?= e(setting('shop_phone')) ?>"></label>
+      <label>Email магазина <input type="email" name="shop_email" value="<?= e(setting('shop_email')) ?>"></label>
+      <label>Адрес магазина <input type="text" name="shop_address" value="<?= e(setting('shop_address')) ?>"></label>
+      <label>Стоимость доставки до транспортной <input type="number" step="0.01" name="delivery_price" value="<?= e(setting('delivery_price')) ?>"></label>
       <label>Валюта <input type="text" name="currency" value="<?= e(setting('currency')) ?>"></label>
-      <label>Стоимость доставки <input type="number" step="0.01" name="delivery_price" value="<?= e(setting('delivery_price')) ?>"></label>
       <button class="btn btn-primary">Сохранить</button>
     </form>
 <?php else: ?>
