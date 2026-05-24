@@ -93,3 +93,88 @@ function redirect($url) { header('Location: ' . $url); exit; }
 function money($v) {
     return number_format((float)$v, 0, ',', ' ') . ' ' . setting('currency', '₽');
 }
+/**
+ * Получить метки статусов заказов
+ */
+function get_order_status_labels(): array {
+    return [
+        'new' => 'Новый',
+        'processing' => 'В обработке',
+        'paid' => 'Оплачен',
+        'shipped' => 'Отправлен',
+        'delivered' => 'Доставлен',
+        'cancelled' => 'Отменён',
+    ];
+}
+
+/**
+ * Проверка и валидация пароля
+ * @return array ['valid'=>bool, 'errors'=>array]
+ */
+function validate_password(string $password): array {
+    $errors = [];
+
+    if (strlen($password) < 6) {
+        $errors[] = 'Пароль должен быть не менее 6 символов';
+    }
+
+    if (preg_match('/[\s\t]/', $password)) {
+        $errors[] = 'Пароль не должен содержать пробелы';
+    }
+
+    return [
+        'valid' => empty($errors),
+        'errors' => $errors,
+    ];
+}
+
+/**
+ * Хеширование пароля
+ */
+function hash_password(string $password): string {
+    return password_hash($password, PASSWORD_BCRYPT);
+}
+
+/**
+ * Проверка пароля
+ */
+function verify_password(string $password, string $hash): bool {
+    return password_verify($password, $hash);
+}
+
+/**
+ * Получить заказы пользователя
+ */
+function get_orders_by_user(int $userId): array {
+    $stmt = db()->prepare("SELECT * FROM orders WHERE user_id=? ORDER BY created_at DESC");
+    $stmt->execute([$userId]);
+    return $stmt->fetchAll();
+}
+
+/**
+ * Получить отзывы пользователя
+ */
+function get_reviews_by_user(int $userId): array {
+    $stmt = db()->prepare("SELECT * FROM reviews WHERE user_id=? ORDER BY created_at DESC");
+    $stmt->execute([$userId]);
+    return $stmt->fetchAll();
+}
+
+/**
+ * Получить товар по ID
+ */
+function get_product_by_id(int $id): ?array {
+    $stmt = db()->prepare("SELECT * FROM products WHERE id=?");
+    $stmt->execute([$id]);
+    $result = $stmt->fetch();
+    return $result ?: null;
+}
+
+/**
+ * Получить элементы заказа
+ */
+function get_order_items(int $orderId): array {
+    $stmt = db()->prepare("SELECT * FROM order_items WHERE order_id=?");
+    $stmt->execute([$orderId]);
+    return $stmt->fetchAll();
+}

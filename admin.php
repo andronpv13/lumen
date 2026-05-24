@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         $id = (int)$_POST['id'];
         $data = ['name'=>$_POST['name'], 'email'=>$_POST['email'], 'role'=>$_POST['role'], 'phone'=>$_POST['phone']];
         if ($id) {
-            if (!empty($_POST['password'])) $data['password'] = password_hash($_POST['password'], PASSWORD_BCRYPT);
+            if (!empty($_POST['password'])) $data['password'] = hash_password($_POST['password']);
             $sql = $id ? "UPDATE users SET name=?,email=?,role=?,phone=?" . (!empty($_POST['password'])?",password=?" : "") . " WHERE id=?" : "";
             $params = [$data['name'], $data['email'], $data['role'], $data['phone']];
             if (!empty($_POST['password'])) $params[] = $data['password'];
@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
             db()->prepare($sql)->execute($params);
         } else {
             db()->prepare("INSERT INTO users (name,email,role,phone,password) VALUES (?,?,?,?,?)")
-                ->execute([$data['name'], $data['email'], $data['role'], $data['phone'], password_hash($_POST['password'] ?? '123456', PASSWORD_BCRYPT)]);
+                ->execute([$data['name'], $data['email'], $data['role'], $data['phone'], hash_password($_POST['password'] ?? '123456')]);
         }
         flash('Сохранено','success'); redirect('?action=users');
     }
@@ -144,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
             $stmt->execute([$user['id']]);
             $row = $stmt->fetch();
             $hash = $row['password'] ?? '';
-            if (!password_verify($current, $hash)) {
+            if (!verify_password($current, $hash)) {
               flash('Текущий пароль неверный','error');
               redirect('?action=account');
             }
@@ -155,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
           $sql = 'UPDATE users SET name=?, email=?, phone=?, address=?';
           if ($password !== '') {
             $sql .= ', password=?';
-            $params[] = password_hash($password, PASSWORD_BCRYPT);
+            $params[] = hash_password($password);
           }
           $sql .= ' WHERE id=?';
           $params[] = $user['id'];
@@ -234,6 +234,7 @@ if ($action === 'dashboard'):
         'pending_reviews' => db()->query("SELECT COUNT(*) FROM reviews WHERE approved=0")->fetchColumn(),
     ];
     $recent = db()->query("SELECT o.*, u.name FROM orders o LEFT JOIN users u ON o.user_id=u.id ORDER BY o.created_at DESC LIMIT 5")->fetchAll();
+    $statusLabels = get_order_status_labels();
 ?>
     <h1>Дашборд</h1>
     <div class="stats-grid">
@@ -243,7 +244,6 @@ if ($action === 'dashboard'):
       <div class="stat"><h3><?= $stats['users'] ?></h3><p>Пользователей</p></div>
       <div class="stat"><h3><?= $stats['pending_reviews'] ?></h3><p>Отзывов на модерации</p></div>
     </div>
-    <?php $statusLabels = ['new'=>'Новый','processing'=>'В обработке','paid'=>'Оплачен','shipped'=>'Отправлен','delivered'=>'Доставлен','cancelled'=>'Отменён']; ?>
     <h2>Последние заказы</h2>
     <table class="admin-table">
       <thead><tr><th>№</th><th>Клиент</th><th>Сумма</th><th>Статус</th><th>Дата</th></tr></thead>
@@ -336,12 +336,12 @@ elseif ($action === 'categories' && !$isMod):
       <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
       <input type="hidden" name="action" value="category_save">
       <input type="hidden" name="id" value="<?= $edit['id'] ?? 0 ?>">
-      <input type="text" name="name" placeholder="Название" value="<?= e($edit['name'] ?? '') ?>" required>
-      <input type="text" name="slug" placeholder="slug" value="<?= e($edit['slug'] ?? '') ?>" required>
+      <input type="text" name="name" placeholder="Название для категории" value="<?= e($edit['name'] ?? '') ?>" required>
+      <input type="text" name="slug" placeholder="Идентификатор писать латиницей" value="<?= e($edit['slug'] ?? '') ?>" required>
       <button class="btn btn-primary">Сохранить</button>
     </form>
     <table class="admin-table">
-      <thead><tr><th>ID</th><th>Название</th><th>Slug</th><th></th></tr></thead>
+      <thead><tr><th>ID</th><th>Название</th><th>Идентификатор</th><th></th></tr></thead>
       <tbody>
       <?php foreach($cats as $c): ?>
         <tr>
@@ -363,14 +363,7 @@ elseif ($action === 'categories' && !$isMod):
 <?php
 // ===== ORDERS =====
 elseif ($action === 'orders'):
-    $statusLabels = [
-        'new' => 'Новый',
-        'processing' => 'В обработке',
-        'paid' => 'Ожидает оплату',
-        'shipped' => 'Отправлен',
-        'delivered' => 'Доставлен',
-        'cancelled' => 'Отменён',
-    ];
+    $statusLabels = get_order_status_labels();
     $paymentStatusLabels = [
         'pending' => 'Обработка',
         'paid' => 'Оплачен',
@@ -470,11 +463,8 @@ elseif ($action === 'account'):
 <?php
 // ===== MY ORDERS =====
 elseif ($action === 'my_orders'):
-    $myOrdersStmt = db()->prepare("SELECT * FROM orders WHERE user_id=? ORDER BY created_at DESC");
-    $myOrdersStmt->execute([$user['id']]);
-    $myOrders = $myOrdersStmt->fetchAll();
+    $myOrders = get_orders_by_user($user['id']);
 ?>
-    <?php $statusLabels = ['new'=>'Новый','processing'=>'В обработке','paid'=>'Оплачен','shipped'=>'Отправлен','delivered'=>'Доставлен','cancelled'=>'Отменён']; ?>
     <h1>Мои заказы</h1>
     <?php if (!$myOrders): ?>
       <p class="empty">У вас пока нет заказов.</p>

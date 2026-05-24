@@ -18,24 +18,6 @@
     </div>
   </div>
 </footer>
-<script>
-document.querySelector('.burger')?.addEventListener('click', () => {
-  document.querySelector('.main-nav').classList.toggle('open');
-});
-
-// Автоматическое скрытие flash-сообщений через 2 секунды
-document.addEventListener('DOMContentLoaded', function() {
-  const flashMessages = document.querySelectorAll('.flash');
-  flashMessages.forEach(function(flash) {
-    setTimeout(function() {
-      flash.style.transition = 'opacity 0.5s ease';
-      flash.style.opacity = '0';
-      setTimeout(function() {
-        flash.parentElement.remove();
-      }, 500);
-    }, 1000);
-  });
-});
-</script>
+<script src="/assets/js/main.js"></script>
 </body>
 </html>
