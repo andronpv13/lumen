@@ -10,9 +10,20 @@ if ($_SERVER['REQUEST_METHOD']==='GET' && isset($_GET['check'])) {
     $value = trim($_GET['value'] ?? '');
     $allowed = ['name','email'];
     if (!in_array($check, $allowed, true) || $value === '') {
-        echo json_encode(['ok' => false]);
+        echo json_encode(['ok' => false, 'exists' => false]);
         exit;
     }
+    // Проверяем наличие пробелов в значении
+    if (preg_match('/\s/', $value)) {
+        echo json_encode(['ok' => false, 'exists' => false]);
+        exit;
+    }
+    // Для email дополнительно проверяем формат
+    if ($check === 'email' && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+        echo json_encode(['ok' => false, 'exists' => false]);
+        exit;
+    }
+    // Проверка занятости в базе данных
     if ($check === 'email') {
         $stmt = db()->prepare("SELECT COUNT(*) FROM users WHERE email=?");
     } else {
@@ -153,6 +164,14 @@ require __DIR__ . '/includes/header.php';
     confirm: document.getElementById('hint-confirm-password')
   };
 
+  // Состояние валидации для каждого поля
+  const validationState = {
+    name: { valid: false, checked: false },
+    email: { valid: false, checked: false },
+    password: { valid: false, checked: false },
+    confirm: { valid: false, checked: false }
+  };
+
   function setState(input, valid, message, forceInvalid = false) {
     const wrap = input.closest('.field-input-wrap');
     const invalid = !valid && forceInvalid;
@@ -162,9 +181,15 @@ require __DIR__ . '/includes/header.php';
     }
     input.classList.toggle('input-valid', valid);
     input.classList.toggle('input-invalid', invalid);
-    const hint = hints[input.dataset.field];
+    const field = input.dataset.field;
+    const hint = hints[field];
     if (hint) {
       hint.textContent = message || '';
+    }
+    // Обновляем состояние валидации
+    if (field && validationState[field]) {
+      validationState[field].valid = valid;
+      validationState[field].checked = true;
     }
   }
 
@@ -173,13 +198,13 @@ require __DIR__ . '/includes/header.php';
   }
 
   function updateSubmitState() {
-    const fields = [nameInput, emailInput, passwordInput, confirmInput];
-    const allValid = fields.every(input => checkField(input, true).valid);
+    // Проверяем, что все поля прошли валидацию и проверку на занятость
+    const allValid = Object.values(validationState).every(state => state.valid && state.checked);
     submitButton.disabled = !allValid;
   }
 
   function checkField(input, showEmptyAsValid = false) {
-    if (!input) return { valid: true };
+    if (!input) return { valid: false };
     const field = input.dataset.field;
     const rawValue = input.value;
     const value = rawValue.trim();
@@ -236,17 +261,35 @@ require __DIR__ . '/includes/header.php';
     fetch(`?check=${type}&value=` + encodeURIComponent(value), { credentials: 'same-origin' })
       .then(res => res.json())
       .then(data => {
-        if (!data.ok) return;
+        if (!data.ok) {
+          // Если сервер вернул ошибку формата или наличия пробелов
+          const field = input.dataset.field;
+          if (validationState[field]) {
+            validationState[field].checked = true;
+          }
+          updateSubmitState();
+          return;
+        }
         if (data.exists) {
-          setState(input, false, type === 'email' ? 'Email уже занят' : 'Имя занято');
+          // Поле занято - подсвечиваем красным, показываем сообщение
+          setState(input, false, type === 'email' ? 'Email уже занят' : 'Имя занято', true);
         } else {
-          if (checkField(input).valid) {
+          // Поле свободно - проверяем общую валидность
+          const result = checkField(input);
+          if (result.valid) {
             setState(input, true, type === 'email' ? 'Email свободен' : 'Имя доступно');
           }
         }
         updateSubmitState();
       })
-      .catch(() => {});
+      .catch(() => {
+        // Ошибка запроса - помечаем как проверенное, но невалидное
+        const field = input.dataset.field;
+        if (validationState[field]) {
+          validationState[field].checked = true;
+        }
+        updateSubmitState();
+      });
   }
 
   if (emailInput && nameInput && passwordInput && confirmInput) {
@@ -295,24 +338,38 @@ require __DIR__ . '/includes/header.php';
 
     nameInput.addEventListener('input', debounced(() => {
       const result = checkField(nameInput, true);
-      if (result.valid) checkAvailability(nameInput, 'name');
-      updateSubmitState();
+      if (result.valid) {
+        checkAvailability(nameInput, 'name');
+      } else {
+        // Если формат невалиден, всё равно помечаем как проверенное
+        validationState.name.checked = true;
+        updateSubmitState();
+      }
     }));
+
     emailInput.addEventListener('input', debounced(() => {
       const result = checkField(emailInput, true);
-      if (result.valid) checkAvailability(emailInput, 'email');
-      updateSubmitState();
+      if (result.valid) {
+        checkAvailability(emailInput, 'email');
+      } else {
+        // Если формат невалиден, всё равно помечаем как проверенное
+        validationState.email.checked = true;
+        updateSubmitState();
+      }
     }));
+
     passwordInput.addEventListener('input', () => {
       checkField(passwordInput, true);
       if (confirmInput.value) checkField(confirmInput, true);
       updateSubmitState();
     });
+
     confirmInput.addEventListener('input', () => {
       checkField(confirmInput, true);
       updateSubmitState();
     });
 
+    // Изначально кнопка заблокирована
     submitButton.disabled = true;
 
     submitButton.addEventListener('click', function(event) {

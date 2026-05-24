@@ -22,8 +22,8 @@ $flash = flash();
       <a href="/cart.php" title="Корзина"><span class="emoji">🛒</span><?php if(cart_count()): ?><span class="badge"><?= cart_count() ?></span><?php endif; ?></a>
       <?php if($user): ?>
         <?php if($user['role'] !== 'admin'): ?>
-          <a href="/users.php" title="Аккаунт">Аккаунт</a>
-          <a href="/orders.php" title="Заказы">Заказы</a>
+          <a href="/users.php" title="Аккаунт"><span class="emoji">👤</span></a>
+          <a href="/orders.php" title="Заказы"><span class="emoji">🛍️</span></a>
         <?php endif; ?>
         <?php if($user['role']==='admin'): ?><a href="/admin.php" title="Админка"><span class="emoji">🛠️</span></a><?php endif; ?>
         <?php if($user['role']==='moderator'): ?><a href="/moderator.php" title="Модерация"><span class="emoji">🛠️</span></a><?php endif; ?>

@@ -13,6 +13,29 @@ img{max-width:100%;display:block}
 .container{max-width:1200px;margin:0 auto;padding:20px;width:100%}
 main{flex:1}
 
+/* Блокировка кнопки "Показать пароль" */
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-show-password-toggle {
+    display: none !important;
+    pointer-events: none !important;
+}
+
+/* Блокировка кнопки очистки поля в IE и старых Edge */
+input::-ms-clear,
+input::-ms-reveal {
+    display: none !important;
+    width: 0;
+    height: 0;
+}
+
+/* Дополнительная блокировка для Chrome/Chromium */
+input::-webkit-search-decoration,
+input::-webkit-search-cancel-button,
+input::-webkit-search-results-button,
+input::-webkit-search-results-decoration {
+    display: none;
+}
+
 /* Header */
 .site-header{background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
 .header-inner{display:flex;align-items:center;justify-content:space-between;gap:20px}
