@@ -212,7 +212,7 @@ require __DIR__ . '/includes/header.php';
         <a href="?action=my_orders" class="<?= $action==='my_orders'?'active':'' ?>">🧾 Мои заказы</a>
       <a href="?action=products" class="<?= $action==='products'?'active':'' ?>">🕯️ Товары</a>
       <?php if(!$isMod): ?><a href="?action=categories" class="<?= $action==='categories'?'active':'' ?>">📂 Категории</a><?php endif; ?>
-      <a href="?action=orders" class="<?= $action==='orders'?'active':'' ?>">📦 Заказы</a>
+      <a href="?action=orders" class="<?= $action==='orders'?'active':'' ?>">🛍️ Заказы</a>
       <a href="?action=reviews" class="<?= $action==='reviews'?'active':'' ?>">⭐ Отзывы</a>
       <?php if(!$isMod): ?>
         <a href="?action=users" class="<?= $action==='users'?'active':'' ?>">👥 Пользователи</a>
@@ -461,7 +461,6 @@ elseif ($action === 'account'):
       <label>Логин <input type="text" name="name" value="<?= e($profile['name']) ?>" required></label>
       <label>Email <input type="email" name="email" value="<?= e($profile['email']) ?>" required></label>
       <label>Телефон <input type="tel" name="phone" value="<?= e($profile['phone'] ?? '') ?>"></label>
-      <label>Наш адрес <textarea name="address"><?= e($profile['address'] ?? '') ?></textarea></label>
       <div class="password-row">
         <label>Текущий пароль <input type="password" name="current_password" placeholder="Оставьте пустым, если не меняете пароль"></label>
         <label>Новый пароль <input type="password" name="password" placeholder="Оставьте пустым, чтобы не менять"></label>
@@ -610,9 +609,13 @@ elseif ($action === 'settings' && !$isMod):
       <label>Название магазина <input type="text" name="shop_name" value="<?= e(setting('shop_name')) ?>"></label>
       <label>Телефон магазина <input type="text" name="shop_phone" value="<?= e(setting('shop_phone')) ?>"></label>
       <label>Email магазина <input type="email" name="shop_email" value="<?= e(setting('shop_email')) ?>"></label>
+      <?php if(!$isMod): ?>
       <label>Адрес магазина <input type="text" name="shop_address" value="<?= e(setting('shop_address')) ?>"></label>
-      <label>Стоимость доставки до транспортной <input type="number" step="0.01" name="delivery_price" value="<?= e(setting('delivery_price')) ?>"></label>
-      <label>Валюта <input type="text" name="currency" value="<?= e(setting('currency')) ?>"></label>
+      <?php endif; ?>
+      <div class="form-row">
+        <label>Стоимость доставки до транспортной <input type="number" step="0.01" name="delivery_price" value="<?= e(setting('delivery_price')) ?>"></label>
+        <label>Валюта <input type="text" name="currency" value="<?= e(setting('currency')) ?>"></label>
+      </div>
       <button class="btn btn-primary">Сохранить</button>
     </form>
 <?php else: ?>
