@@ -27,7 +27,7 @@ function get_orders_by_user($userId) {
 if (!function_exists('get_order_by_id')) {
 function get_order_by_id($id) {
     $db = db();
-    $stmt = $db->prepare("SELECT * FROM orders WHERE id=?");
+    $stmt = $db->prepare("SELECT o.*, u.name as user_login FROM orders o LEFT JOIN users u ON o.user_id=u.id WHERE o.id=?");
     $stmt->execute([$id]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result ?: null;
@@ -57,10 +57,10 @@ if (!function_exists('get_all_orders')) {
 function get_all_orders($status = null) {
     $db = db();
     if ($status) {
-        $stmt = $db->prepare("SELECT o.*, u.name as user_name, u.email as user_email FROM orders o JOIN users u ON o.user_id=u.id WHERE o.status=? ORDER BY o.created_at DESC");
+        $stmt = $db->prepare("SELECT o.*, u.name as user_login FROM orders o LEFT JOIN users u ON o.user_id=u.id WHERE o.status=? ORDER BY o.created_at DESC");
         $stmt->execute([$status]);
     } else {
-        $stmt = $db->prepare("SELECT o.*, u.name as user_name, u.email as user_email FROM orders o JOIN users u ON o.user_id=u.id ORDER BY o.created_at DESC");
+        $stmt = $db->prepare("SELECT o.*, u.name as user_login FROM orders o LEFT JOIN users u ON o.user_id=u.id ORDER BY o.created_at DESC");
         $stmt->execute();
     }
     return $stmt->fetchAll(PDO::FETCH_ASSOC);

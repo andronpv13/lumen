@@ -270,6 +270,7 @@ elseif ($action === 'account'):
       <button class="btn btn-primary">Сохранить профиль</button>
     </form>
 
+<?php
 // ===== MY ORDERS =====
 elseif ($action === 'my_orders'):
     $statusLabels = get_order_status_labels();

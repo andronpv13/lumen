@@ -1,19 +1,6 @@
 <?php
 // admin/orders.php - Управление заказами
-// Все необходимые функции уже загружены в admin.php через functions.php
-
-/**
- * Получить заказ по ID (если не загружен из functions.php)
- */
-if (!function_exists('get_order_by_id')) {
-    function get_order_by_id($id) {
-        $db = db();
-        $stmt = $db->prepare("SELECT * FROM orders WHERE id=?");
-        $stmt->execute([$id]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result ?: null;
-    }
-}
+// Все необходимые функции уже загружены в admin.php через functions.php и includes/repositories
 
 /**
  * Получить элементы заказа (если не загружен из functions.php)
@@ -64,9 +51,8 @@ function render_orders_page($isMod = false, $viewId = null) {
             return;
         }
 ?>
-      <a href="?action=orders" class="btn btn-ghost">← Все заказы</a>
-      <h2>Заказ #<?= $view['id'] ?></h2>
-      <p><strong>Клиент:</strong> <?= e($view['user_name'] ?? 'Гость') ?></p>
+      <h2>Заказ №<?= $view['id'] ?></h2>
+      <p><strong>Клиент:</strong> <?= e($view['user_login'] ?? 'Гость') ?></p>
       <p><strong>Получатель:</strong> <?= e($view['shipping_name']) ?>, <?= e($view['shipping_phone']) ?></p>
       <p><strong>Адрес:</strong> <?= e($view['shipping_address']) ?></p>
       <?php if($view['notes']): ?><p><strong>Примечания:</strong> <?= e($view['notes']) ?></p><?php endif; ?>
@@ -121,8 +107,8 @@ function render_orders_page($isMod = false, $viewId = null) {
       <tbody>
       <?php foreach($orders as $o): ?>
         <tr>
-          <td>#<?= $o['id'] ?></td>
-          <td><?= e($o['user_name'] ?? 'Гость') ?></td>
+          <td>№<?= $o['id'] ?></td>
+          <td><?= e($o['user_login'] ?? 'Гость') ?></td>
           <td><?= money($o['total']) ?></td>
           <td><?= e($statusLabels[$o['status']] ?? $o['status']) ?></td>
           <td><?= e($paymentStatusLabels[$o['payment_status']] ?? $o['payment_status']) ?></td>
