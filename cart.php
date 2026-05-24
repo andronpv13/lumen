@@ -65,14 +65,14 @@ require __DIR__ . '/includes/header.php';
             <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
             <input type="hidden" name="action" value="remove">
             <input type="hidden" name="id" value="<?= $it['id'] ?>">
-            <button class="btn btn-ghost btn-sm">Удалить</button>
+            <button class="btn btn-ghost btn-sm" title="Удалить"> 🗑️ </button>
           </form>
         </td>
       </tr>
     <?php endforeach; ?>
     </tbody>
     <tfoot>
-      <tr><td colspan="3"><strong>Итого</strong></td><td colspan="2"><strong class="big-price"><?= money($total) ?></strong></td></tr>
+      <tr><td colspan="3"><strong>Итого товаров в 🛒 - <?php if(cart_count()): ?><?= cart_count() ?><?php endif; ?></strong></td><td colspan="2"><strong class="big-price"><?= money($total) ?></strong></td></tr>
     </tfoot>
   </table>
 
@@ -80,7 +80,7 @@ require __DIR__ . '/includes/header.php';
     <form method="post" onsubmit="return confirm('Очистить корзину?')">
       <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
       <input type="hidden" name="action" value="clear">
-      <button class="btn btn-ghost">Очистить корзину</button>
+      <button class="btn btn-ghost" title=""> Очистить 🛒 </button>
     </form>
     <a href="/checkout.php" class="btn btn-primary">Оформить заказ →</a>
   </div>
