@@ -55,9 +55,13 @@ require __DIR__ . '/includes/header.php';
   <div class="reviews-grid">
     <?php foreach($reviews as $review): ?>
       <div class="review-card">
-        <div class="review-header">
+        <div class="review-card__info">
           <h3><?= e($review['product_name']) ?></h3>
-          <div class="rating" style="width: <?= $review['rating'] * 20 ?>%"></div>
+          <div class="rating-stars">
+            <?php for ($i = 1; $i <= 5; $i++): ?>
+              <span class="star <?= $i <= $review['rating'] ? 'star-filled' : 'star-empty' ?>">★</span>
+            <?php endfor; ?>
+          </div>
         </div>
         <p class="review-text"><?= e($review['text']) ?></p>
         <div class="review-footer">

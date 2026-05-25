@@ -180,7 +180,7 @@ if (empty($errors) || !isset($_POST['save_review'])) {
                     <h3><?= e($review['product_name']) ?></h3>
                     <div class="rating-stars">
                         <?php for ($i = 1; $i <= 5; $i++): ?>
-                            <span class="star <?= $i <= $review['rating'] ? 'star-filled' : 'star-empty' ?>"><?= $i <= $review['rating'] ? '★' : '' ?></span>
+                            <span class="star <?= $i <= $review['rating'] ? 'star-filled' : 'star-empty' ?>">★</span>
                         <?php endfor; ?>
                     </div>
                 </div>
