@@ -1,11 +1,11 @@
 <?php
 session_start();
-require_once 'config.php';
-require_once 'functions.php';
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/includes/functions.php';
 
 // Проверка авторизации
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+if (!isset($_SESSION['user'])) {
+    header('Location: auth.php');
     exit;
 }
 
@@ -33,7 +33,7 @@ $pageTitle = match($activeTab) {
     <div class="container">
         <!-- Динамический заголовок страницы -->
         <h2><?php echo htmlspecialchars($pageTitle); ?></h2>
-        
+
         <!-- Навигация по вкладкам -->
         <div class="tabs">
             <a href="?tab=profile" class="<?php echo $activeTab === 'profile' ? 'active' : ''; ?>">Профиль</a>
@@ -44,19 +44,19 @@ $pageTitle = match($activeTab) {
         <!-- Содержимое вкладки -->
         <div class="tab-content">
             <?php if ($activeTab === 'profile'): ?>
-                <?php 
-                $standalone = false; 
-                include __DIR__ . '/users/profile.php'; 
+                <?php
+                $standalone = false;
+                include __DIR__ . '/users/profile.php';
                 ?>
             <?php elseif ($activeTab === 'orders'): ?>
-                <?php 
-                $standalone = false; 
-                include __DIR__ . '/users/orders.php'; 
+                <?php
+                $standalone = false;
+                include __DIR__ . '/users/orders.php';
                 ?>
             <?php elseif ($activeTab === 'reviews'): ?>
-                <?php 
-                $standalone = false; 
-                include __DIR__ . '/users/reviews.php'; 
+                <?php
+                $standalone = false;
+                include __DIR__ . '/users/reviews.php';
                 ?>
             <?php endif; ?>
         </div>

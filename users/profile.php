@@ -1,7 +1,7 @@
 <?php
 // profile.php - может использоваться как отдельно, так и включаться в users.php
 if (!isset($user)) {
-    require_once __DIR__ . '/includes/functions.php';
+    require_once __DIR__ . '/../includes/functions.php';
     require_login();
     $user = current_user();
     $standalone = true;
@@ -120,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_profile') {
 // Если автономный режим, загружаем заголовок
 if ($standalone) {
     $pageTitle = 'Данные профиля';
-    require __DIR__ . '/includes/header.php';
+    require __DIR__ . '/../includes/header.php';
     ?>
     <h2><?= e($pageTitle) ?></h2>
     <?php
@@ -163,5 +163,5 @@ if ($standalone) {
 </section>
 
 <?php if ($standalone): ?>
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php require __DIR__ . '/../includes/footer.php'; ?>
 <?php endif; ?>
