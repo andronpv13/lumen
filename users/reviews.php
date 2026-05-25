@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_review'])) {
 if (empty($errors) || !isset($_POST['save_review'])) {
     // Получение заказанных товаров для возможности оставлять отзывы
     $orderedItemsStmt = db()->prepare("
-        SELECT DISTINCT p.id, p.name, p.image AS image_url, o.id as order_id, MAX(o.created_at) as latest_order_date
+        SELECT DISTINCT p.id, p.name, p.image, o.id as order_id, MAX(o.created_at) as latest_order_date
         FROM products p
         JOIN order_items oi ON p.id = oi.product_id
         JOIN orders o ON oi.order_id = o.id
@@ -132,8 +132,10 @@ if (empty($errors) || !isset($_POST['save_review'])) {
         <?php foreach ($orderedItems as $item): ?>
             <?php if (!in_array($item['id'], $reviewedIds)): ?>
                 <div class="product-card">
-                    <?php if ($item['image_url']): ?>
-                        <img src="<?php echo htmlspecialchars($item['image_url']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
+                    <?php if ($item['image']): ?>
+                        <img src="<?php echo htmlspecialchars(product_image($item['image'])); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
+                    <?php else: ?>
+                        <img src="assets/placeholder.svg" alt="<?php echo htmlspecialchars($item['name']); ?>">
                     <?php endif; ?>
                     <h4><?php echo htmlspecialchars($item['name']); ?></h4>
                     <button onclick="toggleReviewForm(<?php echo $item['id']; ?>)">Оставить отзыв</button>
@@ -165,17 +167,16 @@ if (empty($errors) || !isset($_POST['save_review'])) {
 
 <?php if (!empty($userReviews)): ?>
     <h3>Мои отзывы</h3>
-    <div class="reviews-list">
+    <div class="reviews-grid">
         <?php foreach ($userReviews as $review): ?>
-            <div class="review-item">
-                <?php if ($review['product_image']): ?>
-                    <img src="<?php echo htmlspecialchars($review['product_image']); ?>" alt="<?php echo htmlspecialchars($review['product_name']); ?>" width="50">
-                <?php endif; ?>
-                <div>
-                    <strong><?php echo htmlspecialchars($review['product_name']); ?></strong><br>
-                    Оценка: <?php echo str_repeat('★', $review['rating']) . str_repeat('☆', 5 - $review['rating']); ?><br>
-                    <?php echo htmlspecialchars($review['comment']); ?><br>
-                    <small>Обновлено: <?php echo date('d.m.Y H:i', strtotime($review['updated_at'] ?? $review['created_at'])); ?></small>
+            <div class="review-card">
+                <div class="review-header">
+                    <h3><?= e($review['product_name']) ?></h3>
+                    <div class="rating" style="width: <?= $review['rating'] * 20 ?>%"></div>
+                </div>
+                <p class="review-text"><?= e($review['comment']) ?></p>
+                <div class="review-footer">
+                    <span class="author"><?= e($user['name']) ?></span>
                 </div>
             </div>
         <?php endforeach; ?>
