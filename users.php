@@ -95,9 +95,9 @@ require __DIR__ . '/includes/header.php';
     <h2><?= e($pageTitle) ?></h2>
 
     <?php if ($tab === 'profile'): ?>
-      <?php include __DIR__ . '/profile.php'; ?>
+      <?php include __DIR__ . '/users/profile.php'; ?>
     <?php elseif ($tab === 'orders'): ?>
-      <?php include __DIR__ . '/orders.php'; ?>
+      <?php include __DIR__ . '/users/orders.php'; ?>
     <?php elseif ($tab === 'reviews'): ?>
       <section class="account-panel">
         <?php if (!$orderedItems): ?>

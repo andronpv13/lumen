@@ -37,7 +37,7 @@ require __DIR__ . '/includes/header.php';
 <h1>Корзина</h1>
 
 <?php if(!$items): ?>
-  <p class="empty">Корзина пуста. <a href="/">Вернуться в каталог</a></p>
+  <p class="empty">Корзина пуста. <a href="/shop.php" class="btn btn-sm btn-ghost" style="margin-bottom:1rem;">Вернуться в каталог</a></p>
 <?php else: ?>
   <table class="cart-table">
     <thead><tr><th>Товар</th><th>Цена</th><th>Кол-во</th><th>Сумма</th><th></th></tr></thead>
