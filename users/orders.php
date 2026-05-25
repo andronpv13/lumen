@@ -58,7 +58,7 @@ $statusLabels = ['new'=>'Новый','processing'=>'В обработке','paid
     <p><strong>Статус:</strong> <?= e($statusLabels[$detail['status']] ?? $detail['status']) ?></p>
     <p><strong>Дата:</strong> <?= date('d.m.Y H:i', strtotime($detail['created_at'])) ?></p>
     <p><strong>Адрес:</strong> <?= e($detail['shipping_address']) ?></p>
-    <table class="cart-table">
+    <table class="admin-table">
       <thead><tr><th>Товар</th><th>Цена</th><th>Кол-во</th><th>Сумма</th></tr></thead>
       <tbody>
       <?php foreach($detailItems as $it): ?>
@@ -77,7 +77,7 @@ $statusLabels = ['new'=>'Новый','processing'=>'В обработке','paid
   <?php if(!$orders): ?>
     <p class="empty">У вас пока нет заказов. <a href="/">Перейти в каталог</a></p>
   <?php else: ?>
-    <table class="cart-table">
+    <table class="admin-table">
       <thead><tr><th>№</th><th>Дата</th><th>Сумма</th><th>Статус</th><th>Оплата</th><th>Действия</th></tr></thead>
       <tbody>
       <?php foreach($orders as $o): ?>
@@ -87,7 +87,7 @@ $statusLabels = ['new'=>'Новый','processing'=>'В обработке','paid
           <td><?= money($o['total']) ?></td>
           <td><span class="status status-<?= $o['status'] ?>"><?= $statusLabels[$o['status']] ?? $o['status'] ?></span></td>
           <td><?= $o['payment_status']==='paid'?'Оплачен':'Ожидает' ?></td>
-          <td><a href="/users.php?tab=orders&order_id=<?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a></td>
+          <td><a href="?tab=orders&order_id=<?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a></td>
         </tr>
       <?php endforeach; ?>
       </tbody>

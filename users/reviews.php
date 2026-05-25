@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_review'])) {
 if (empty($errors) || !isset($_POST['save_review'])) {
     // Получение заказанных товаров для возможности оставлять отзывы
     $orderedItemsStmt = db()->prepare("
-        SELECT DISTINCT p.id, p.name, p.image_url, o.id as order_id
+        SELECT DISTINCT p.id, p.name, p.image, o.id as order_id
         FROM products p
         JOIN order_items oi ON p.id = oi.product_id
         JOIN orders o ON oi.order_id = o.id
@@ -96,7 +96,7 @@ if (empty($errors) || !isset($_POST['save_review'])) {
 
     // Получение своих отзывов для отображения
     $userReviewsStmt = db()->prepare("
-        SELECT r.*, p.name as product_name, p.image_url as product_image
+        SELECT r.*, p.name as product_name, p.image as product_image
         FROM reviews r
         JOIN products p ON r.product_id = p.id
         WHERE r.user_id = ?

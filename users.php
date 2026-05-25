@@ -8,6 +8,8 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
+$user = current_user();
+
 // Определение активной вкладки
 $activeTab = $_GET['tab'] ?? 'profile';
 
@@ -19,46 +21,41 @@ $pageTitle = match($activeTab) {
     default => 'Данные профиля'
 };
 
+require __DIR__ . '/includes/header.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title><?php echo htmlspecialchars($pageTitle); ?></title>
-    <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-    <div class="container">
-        <!-- Динамический заголовок страницы -->
-        <h2><?php echo htmlspecialchars($pageTitle); ?></h2>
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <h3>Личный кабинет</h3>
+    <nav>
+      <a href="?tab=profile" class="<?= $activeTab==='profile'?'active':'' ?>">👤 Профиль</a>
+      <a href="?tab=orders" class="<?= $activeTab==='orders'?'active':'' ?>">🧾 Заказы</a>
+      <a href="?tab=reviews" class="<?= $activeTab==='reviews'?'active':'' ?>">⭐ Отзывы</a>
+      <a href="/">🏠 На сайт</a>
+    </nav>
+  </aside>
 
-        <!-- Навигация по вкладкам -->
-        <div class="tabs">
-            <a href="?tab=profile" class="<?php echo $activeTab === 'profile' ? 'active' : ''; ?>">Профиль</a>
-            <a href="?tab=orders" class="<?php echo $activeTab === 'orders' ? 'active' : ''; ?>">Заказы</a>
-            <a href="?tab=reviews" class="<?php echo $activeTab === 'reviews' ? 'active' : ''; ?>">Отзывы</a>
-        </div>
+  <section class="admin-main">
+    <h1><?php echo htmlspecialchars($pageTitle); ?></h1>
 
-        <!-- Содержимое вкладки -->
-        <div class="tab-content">
-            <?php if ($activeTab === 'profile'): ?>
-                <?php
-                $standalone = false;
-                include __DIR__ . '/users/profile.php';
-                ?>
-            <?php elseif ($activeTab === 'orders'): ?>
-                <?php
-                $standalone = false;
-                include __DIR__ . '/users/orders.php';
-                ?>
-            <?php elseif ($activeTab === 'reviews'): ?>
-                <?php
-                $standalone = false;
-                include __DIR__ . '/users/reviews.php';
-                ?>
-            <?php endif; ?>
-        </div>
-    </div>
-</body>
-</html>
+    <!-- Содержимое вкладки -->
+    <?php if ($activeTab === 'profile'): ?>
+        <?php
+        $standalone = false;
+        include __DIR__ . '/users/profile.php';
+        ?>
+    <?php elseif ($activeTab === 'orders'): ?>
+        <?php
+        $standalone = false;
+        include __DIR__ . '/users/orders.php';
+        ?>
+    <?php elseif ($activeTab === 'reviews'): ?>
+        <?php
+        $standalone = false;
+        include __DIR__ . '/users/reviews.php';
+        ?>
+    <?php endif; ?>
+  </section>
+</div>
+
+<?php require __DIR__ . '/includes/footer.php'; ?>
