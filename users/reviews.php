@@ -110,6 +110,8 @@ if (empty($errors) || !isset($_POST['save_review'])) {
 // Вывод сообщений об ошибках/успехе и контента
 ?>
 
+<div class="admin-content-block">
+
 <?php if (!empty($errors)): ?>
     <div class="error">
         <?php foreach ($errors as $error): ?>
@@ -147,11 +149,14 @@ if (empty($errors) || !isset($_POST['save_review'])) {
                                 <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
 
                                 <label for="rating_<?php echo $item['id']; ?>">Оценка:</label>
-                                <select name="rating" id="rating_<?php echo $item['id']; ?>" required>
-                                    <?php for ($i = 5; $i >= 1; $i--): ?>
-                                        <option value="<?php echo $i; ?>" <?php echo $i === 5 ? 'selected' : ''; ?>><?php echo $i; ?> <?php echo $i === 5 ? '★' : '☆'; ?></option>
-                                    <?php endfor; ?>
-                                </select><br>
+                                <div class="star-rating-input" id="star-rating-<?php echo $item['id']; ?>">
+                                    <span data-value="1" onclick="setRating(<?php echo $item['id']; ?>, 1)">★</span>
+                                    <span data-value="2" onclick="setRating(<?php echo $item['id']; ?>, 2)">★</span>
+                                    <span data-value="3" onclick="setRating(<?php echo $item['id']; ?>, 3)">★</span>
+                                    <span data-value="4" onclick="setRating(<?php echo $item['id']; ?>, 4)">★</span>
+                                    <span data-value="5" onclick="setRating(<?php echo $item['id']; ?>, 5)">★</span>
+                                    <input type="hidden" name="rating" id="rating_<?php echo $item['id']; ?>" value="5">
+                                </div>
 
                                 <label for="comment_<?php echo $item['id']; ?>">Комментарий:</label>
                                 <textarea name="comment" id="comment_<?php echo $item['id']; ?>" placeholder="Ваш отзыв о товаре..."></textarea><br>
@@ -171,14 +176,11 @@ if (empty($errors) || !isset($_POST['save_review'])) {
     <div class="reviews-grid">
         <?php foreach ($userReviews as $review): ?>
             <div class="review-card">
-                <?php if ($review['product_image']): ?>
-                    <img src="<?= htmlspecialchars(product_image($review['product_image'])) ?>" alt="<?= e($review['product_name']) ?>" class="review-product-image">
-                <?php endif; ?>
                 <div class="review-card__info">
                     <h3><?= e($review['product_name']) ?></h3>
                     <div class="rating-stars">
                         <?php for ($i = 1; $i <= 5; $i++): ?>
-                            <span class="star <?= $i <= $review['rating'] ? 'star-filled' : 'star-empty' ?>"><?= $i <= $review['rating'] ? '★' : '☆' ?></span>
+                            <span class="star <?= $i <= $review['rating'] ? 'star-filled' : 'star-empty' ?>"><?= $i <= $review['rating'] ? '★' : '' ?></span>
                         <?php endfor; ?>
                     </div>
                 </div>
@@ -192,9 +194,38 @@ if (empty($errors) || !isset($_POST['save_review'])) {
     </div>
 <?php endif; ?>
 
+</div><!-- /.admin-content-block -->
+
 <script>
 function toggleReviewForm(productId) {
     const form = document.getElementById('review-form-' + productId);
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
+
+function setRating(productId, rating) {
+    // Устанавливаем значение в скрытый input
+    document.getElementById('rating_' + productId).value = rating;
+
+    // Обновляем визуальное отображение звёзд
+    const container = document.getElementById('star-rating-' + productId);
+    const stars = container.querySelectorAll('span');
+
+    stars.forEach(function(star) {
+        const value = parseInt(star.getAttribute('data-value'));
+        if (value <= rating) {
+            star.classList.add('active');
+        } else {
+            star.classList.remove('active');
+        }
+    });
+}
+
+// Инициализация: устанавливаем 5 звёзд по умолчанию при открытии формы
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('.review-form');
+    forms.forEach(function(form) {
+        const productId = form.id.replace('review-form-', '');
+        setRating(productId, 5);
+    });
+});
 </script>

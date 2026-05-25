@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_profile') {
 }
 ?>
 
-<section class="account-panel">
+<section class="account-panel admin-content-block">
   <form method="post" class="admin-form">
     <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
     <input type="hidden" name="action" value="save_profile">
