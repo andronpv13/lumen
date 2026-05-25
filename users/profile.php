@@ -1,12 +1,24 @@
 <?php
-// profile.php - может использоваться как отдельно, так и включаться в users.php
-if (!isset($user)) {
+// profile.php - модуль для users.php (не должен загружаться автономно)
+
+// Проверка: если файл вызван напрямую (автономно), перенаправляем на users.php
+if (!isset($standalone) || $standalone !== false) {
+    // Файл вызван напрямую, а не через include из users.php
+    // Перенаправляем на страницу пользователей с вкладкой профиля
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
     require_once __DIR__ . '/../includes/functions.php';
     require_login();
+
+    header('Location: /users.php?tab=profile');
+    exit;
+}
+
+// Режим модуля: переменная $user должна быть установлена в users.php
+if (!isset($user)) {
+    // Это не должно произойти, но на всякий случай
     $user = current_user();
-    $standalone = true;
-} else {
-    $standalone = false;
 }
 
 $action = $_POST['action'] ?? '';
@@ -49,18 +61,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_profile') {
         if ($password !== '') {
             if (!password_verify($currentPassword, $user['password'])) {
                 flash('Неверный текущий пароль','error');
-                if ($standalone) {
-                    redirect('/users.php?tab=profile');
-                }
             } else {
                 $stmt = db()->prepare("SELECT password FROM users WHERE id=?");
                 $stmt->execute([$user['id']]);
                 $dbUser = $stmt->fetch();
                 if (!password_verify($currentPassword, $dbUser['password'])) {
                     flash('Неверный текущий пароль','error');
-                    if ($standalone) {
-                        redirect('/users.php?tab=profile');
-                    }
                 }
             }
         }
@@ -97,33 +103,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_profile') {
                 $user = current_user();
                 flash('Профиль сохранён','success');
 
-                if ($standalone) {
-                    redirect('/users.php?tab=profile');
-                }
             } catch (PDOException $e) {
                 flash('Ошибка сохранения профиля: ' . $e->getMessage(),'error');
-                if ($standalone) {
-                    redirect('/users.php?tab=profile');
-                }
             }
         }
     }
 
     // Перезагрузка профиля доставки после сохранения
-    if (!$standalone) {
-        $stmt = db()->prepare("SELECT * FROM user_delivery_profiles WHERE user_id=?");
-        $stmt->execute([$user['id']]);
-        $deliveryProfile = $stmt->fetch() ?: null;
-    }
-}
-
-// Если автономный режим, загружаем заголовок
-if ($standalone) {
-    $pageTitle = 'Данные профиля';
-    require __DIR__ . '/../includes/header.php';
-    ?>
-    <h2><?= e($pageTitle) ?></h2>
-    <?php
+    $stmt = db()->prepare("SELECT * FROM user_delivery_profiles WHERE user_id=?");
+    $stmt->execute([$user['id']]);
+    $deliveryProfile = $stmt->fetch() ?: null;
 }
 ?>
 
@@ -161,7 +150,3 @@ if ($standalone) {
     <button class="btn btn-primary" style="margin-top: 1rem;">Сохранить адрес доставки</button>
   </form>
 </section>
-
-<?php if ($standalone): ?>
-<?php require __DIR__ . '/../includes/footer.php'; ?>
-<?php endif; ?>

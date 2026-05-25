@@ -1,12 +1,34 @@
 <?php
-// orders.php - может использоваться как отдельно, так и включаться в users.php
-if (!isset($user)) {
-    require_once __DIR__ . '/includes/functions.php';
+// orders.php - модуль для users.php (не должен загружаться автономно)
+
+// Проверка: если файл вызван напрямую (автономно), перенаправляем на users.php
+if (!isset($standalone) || $standalone !== false) {
+    // Файл вызван напрямую, а не через include из users.php
+    // Перенаправляем на страницу пользователей с вкладкой заказов
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    require_once __DIR__ . '/../includes/functions.php';
     require_login();
+
+    // Сохраняем параметры для передачи в users.php
+    $queryParams = [];
+    if (isset($_GET['order_id'])) {
+        $queryParams['order_id'] = $_GET['order_id'];
+    }
+    if (isset($_GET['id'])) {
+        $queryParams['id'] = $_GET['id'];
+    }
+
+    $queryString = http_build_query(array_merge(['tab' => 'orders'], $queryParams));
+    header('Location: /users.php?' . $queryString);
+    exit;
+}
+
+// Режим модуля: переменная $user должна быть установлена в users.php
+if (!isset($user)) {
+    // Это не должно произойти, но на всякий случай
     $user = current_user();
-    $standalone = true;
-} else {
-    $standalone = false;
 }
 
 $orders = db()->prepare("SELECT * FROM orders WHERE user_id=? ORDER BY created_at DESC");
@@ -28,14 +50,6 @@ if ($orderId) {
 }
 
 $statusLabels = ['new'=>'Новый','processing'=>'В обработке','paid'=>'Оплачен','shipped'=>'Отправлен','delivered'=>'Доставлен','cancelled'=>'Отменён'];
-
-if ($standalone) {
-    $pageTitle = 'Мои заказы';
-    require __DIR__ . '/includes/header.php';
-    ?>
-    <h1><?= $detail ? 'Детали заказа' : 'Мои заказы' ?></h1>
-    <?php
-}
 ?>
 
 <?php if($detail): ?>
@@ -73,14 +87,10 @@ if ($standalone) {
           <td><?= money($o['total']) ?></td>
           <td><span class="status status-<?= $o['status'] ?>"><?= $statusLabels[$o['status']] ?? $o['status'] ?></span></td>
           <td><?= $o['payment_status']==='paid'?'Оплачен':'Ожидает' ?></td>
-          <td><a href="<?= $standalone ? '/orders.php?id=' : '/users.php?tab=orders&order_id=' ?><?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a></td>
+          <td><a href="/users.php?tab=orders&order_id=<?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a></td>
         </tr>
       <?php endforeach; ?>
       </tbody>
     </table>
   <?php endif; ?>
-<?php endif; ?>
-
-<?php if ($standalone): ?>
-<?php require __DIR__ . '/includes/footer.php'; ?>
 <?php endif; ?>

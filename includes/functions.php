@@ -1,5 +1,8 @@
 <?php
 // includes/functions.php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/db.php';
 
 // Подключаем репозитории для работы с базой данных
