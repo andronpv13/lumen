@@ -210,7 +210,7 @@ require __DIR__ . '/includes/header.php';
         <tbody>
         <?php foreach ($orders as $o): ?>
           <tr>
-            <td>#<?= $o['id'] ?></td>
+            <td>№<?= $o['id'] ?></td>
             <td><?= date('d.m.Y', strtotime($o['created_at'])) ?></td>
             <td><?= money($o['total']) ?></td>
             <td><?= e($statusLabels[$o['status']] ?? $o['status']) ?></td>

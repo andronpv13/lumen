@@ -27,7 +27,7 @@ require __DIR__ . '/includes/header.php';
 $statusLabels = ['new'=>'Новый','processing'=>'В обработке','paid'=>'Оплачен','shipped'=>'Отправлен','delivered'=>'Доставлен','cancelled'=>'Отменён'];
 ?>
 
-<h1>Мои заказы</h1>
+<h1><?= $detail ? 'Детали заказа' : 'Мои заказы' ?></h1>
 
 <?php if($detail): ?>
   <a href="/orders.php" class="back">← Все заказы</a>
