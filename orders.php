@@ -56,11 +56,11 @@ $statusLabels = ['new'=>'Новый','processing'=>'В обработке','paid
     <p class="empty">У вас пока нет заказов. <a href="/">Перейти в каталог</a></p>
   <?php else: ?>
     <table class="cart-table">
-      <thead><tr><th>№</th><th>Дата</th><th>Сумма</th><th>Статус</th><th>Оплата</th><th></th></tr></thead>
+      <thead><tr><th>№</th><th>Дата</th><th>Сумма</th><th>Статус</th><th>Оплата</th><th>Действия</th></tr></thead>
       <tbody>
       <?php foreach($orders as $o): ?>
         <tr>
-          <td>#<?= $o['id'] ?></td>
+          <td>№<?= $o['id'] ?></td>
           <td><?= date('d.m.Y', strtotime($o['created_at'])) ?></td>
           <td><?= money($o['total']) ?></td>
           <td><span class="status status-<?= $o['status'] ?>"><?= $statusLabels[$o['status']] ?? $o['status'] ?></span></td>
