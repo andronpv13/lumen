@@ -125,41 +125,42 @@ if (empty($errors) || !isset($_POST['save_review'])) {
 <?php endif; ?>
 
 <h3>Товары для отзыва</h3>
-<div class="products-grid">
+<div class="product-grid reviews-grid">
     <?php if (empty($orderedItems)): ?>
-        <p>У вас пока нет заказов, на которые можно оставить отзыв.</p>
+        <p class="empty">У вас пока нет заказов, на которые можно оставить отзыв.</p>
     <?php else: ?>
         <?php foreach ($orderedItems as $item): ?>
             <?php if (!in_array($item['id'], $reviewedIds)): ?>
-                <div class="product-card">
+                <article class="product-card">
                     <?php if ($item['image']): ?>
                         <img src="<?php echo htmlspecialchars(product_image($item['image'])); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
                     <?php else: ?>
                         <img src="assets/placeholder.svg" alt="<?php echo htmlspecialchars($item['name']); ?>">
                     <?php endif; ?>
-                    <h4><?php echo htmlspecialchars($item['name']); ?></h4>
-                    <button onclick="toggleReviewForm(<?php echo $item['id']; ?>)">Оставить отзыв</button>
+                    <div class="product-info">
+                        <h3><?php echo htmlspecialchars($item['name']); ?></h3>
+                        <button class="btn btn-primary btn-sm" onclick="toggleReviewForm(<?php echo $item['id']; ?>)">Оставить отзыв</button>
 
-                    <div id="review-form-<?php echo $item['id']; ?>" class="review-form" style="display:none;">
-                        <form method="post">
-                            <input type="hidden" name="order_id" value="<?php echo $item['order_id']; ?>">
-                            <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
+                        <div id="review-form-<?php echo $item['id']; ?>" class="review-form" style="display:none;">
+                            <form method="post">
+                                <input type="hidden" name="order_id" value="<?php echo $item['order_id']; ?>">
+                                <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
 
-                            <label for="rating_<?php echo $item['id']; ?>">Оценка:</label>
-                            <select name="rating" id="rating_<?php echo $item['id']; ?>" required>
-                                <option value="">Выберите оценку</option>
-                                <?php for ($i = 1; $i <= 5; $i++): ?>
-                                    <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
-                                <?php endfor; ?>
-                            </select><br>
+                                <label for="rating_<?php echo $item['id']; ?>">Оценка:</label>
+                                <select name="rating" id="rating_<?php echo $item['id']; ?>" required>
+                                    <?php for ($i = 5; $i >= 1; $i--): ?>
+                                        <option value="<?php echo $i; ?>" <?php echo $i === 5 ? 'selected' : ''; ?>><?php echo $i; ?> <?php echo $i === 5 ? '★' : '☆'; ?></option>
+                                    <?php endfor; ?>
+                                </select><br>
 
-                            <label for="comment_<?php echo $item['id']; ?>">Комментарий:</label>
-                            <textarea name="comment" id="comment_<?php echo $item['id']; ?>"></textarea><br>
+                                <label for="comment_<?php echo $item['id']; ?>">Комментарий:</label>
+                                <textarea name="comment" id="comment_<?php echo $item['id']; ?>" placeholder="Ваш отзыв о товаре..."></textarea><br>
 
-                            <button type="submit" name="save_review">Отправить отзыв</button>
-                        </form>
+                                <button type="submit" name="save_review" class="btn btn-primary">Отправить отзыв</button>
+                            </form>
+                        </div>
                     </div>
-                </div>
+                </article>
             <?php endif; ?>
         <?php endforeach; ?>
     <?php endif; ?>
@@ -170,13 +171,21 @@ if (empty($errors) || !isset($_POST['save_review'])) {
     <div class="reviews-grid">
         <?php foreach ($userReviews as $review): ?>
             <div class="review-card">
-                <div class="review-header">
+                <?php if ($review['product_image']): ?>
+                    <img src="<?= htmlspecialchars(product_image($review['product_image'])) ?>" alt="<?= e($review['product_name']) ?>" class="review-product-image">
+                <?php endif; ?>
+                <div class="review-card__info">
                     <h3><?= e($review['product_name']) ?></h3>
-                    <div class="rating" style="width: <?= $review['rating'] * 20 ?>%"></div>
+                    <div class="rating-stars">
+                        <?php for ($i = 1; $i <= 5; $i++): ?>
+                            <span class="star <?= $i <= $review['rating'] ? 'star-filled' : 'star-empty' ?>"><?= $i <= $review['rating'] ? '★' : '☆' ?></span>
+                        <?php endfor; ?>
+                    </div>
                 </div>
                 <p class="review-text"><?= e($review['comment']) ?></p>
                 <div class="review-footer">
                     <span class="author"><?= e($user['name']) ?></span>
+                    <time class="muted small"><?= date('d.m.Y', strtotime($review['created_at'])) ?></time>
                 </div>
             </div>
         <?php endforeach; ?>
