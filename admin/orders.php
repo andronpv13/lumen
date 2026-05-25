@@ -35,6 +35,7 @@ if (!function_exists('get_order_status_labels')) {
  * @param int|null $viewId ID заказа для просмотра деталей
  */
 function render_orders_page($isMod = false, $viewId = null) {
+    $user = current_user();
     $statusLabels = get_order_status_labels();
     $paymentStatusLabels = [
         'pending' => 'Обработка',
@@ -99,7 +100,11 @@ function render_orders_page($isMod = false, $viewId = null) {
       </table>
 <?php
     } else {
-        $orders = get_all_orders();
+        // Получаем все заказы, исключая заказы текущего админа
+        $allOrders = get_all_orders();
+        $orders = array_filter($allOrders, function($o) use ($user) {
+            return (int)$o['user_id'] !== (int)$user['id'];
+        });
 ?>
     <h1>Заказы</h1>
     <table class="admin-table">

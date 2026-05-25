@@ -52,7 +52,7 @@ function render_admin_dashboard($user, $isMod = false) {
       <tbody>
       <?php foreach($recent as $o): ?>
         <tr>
-          <td>#<?= $o['id'] ?></td>
+          <td>№<?= $o['id'] ?></td>
           <td><?= e($o['name'] ?? 'Гость') ?></td>
           <td><?= money($o['total']) ?></td>
           <td><?= e($statusLabels[$o['status']] ?? $o['status']) ?></td>

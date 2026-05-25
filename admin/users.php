@@ -68,7 +68,7 @@ function render_users_page($isMod = false, $editId = null) {
     <?php endif; ?>
 
     <table class="admin-table">
-      <thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th>Дата</th><th></th></tr></thead>
+      <thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Роль</th><th>Дата</th><th>Действия</th></tr></thead>
       <tbody>
       <?php foreach($users as $u): ?>
         <tr>

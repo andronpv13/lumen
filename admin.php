@@ -293,6 +293,12 @@ elseif ($action === 'my_orders'):
             <td>
               <?php if (($user['role'] ?? '') === 'admin'): ?>
                 <a href="?action=orders&id=<?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a>
+                <form method="post" style="display:inline" onsubmit="return confirm('Удалить?')">
+                  <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
+                  <input type="hidden" name="action" value="order_delete">
+                  <input type="hidden" name="id" value="<?= $o['id'] ?>">
+                  <button class="btn btn-sm btn-ghost">🗑️</button>
+                </form>
               <?php else: ?>
                 <a href="/orders.php?id=<?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a>
               <?php endif; ?>

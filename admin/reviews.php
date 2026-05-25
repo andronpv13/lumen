@@ -28,7 +28,7 @@ function render_reviews_page($isMod = false) {
 ?>
     <h1>Отзывы</h1>
     <table class="admin-table">
-      <thead><tr><th>Товар</th><th>Автор</th><th>Оценка</th><th>Текст</th><th>Статус</th><th></th></tr></thead>
+      <thead><tr><th>Товар</th><th>Автор</th><th>Оценка</th><th>Текст</th><th>Статус</th><th>Действия</th></tr></thead>
       <tbody>
       <?php foreach($reviews as $r): ?>
         <tr>

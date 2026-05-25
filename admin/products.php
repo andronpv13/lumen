@@ -99,26 +99,25 @@ function render_products_page($isMod = false, $editId = null) {
 
         <label>Цена <input type="number" step="0.01" name="price" value="<?= $edit['price'] ?? 0 ?>" required></label>
         <label>Остаток <input type="number" name="stock" value="<?= $edit['stock'] ?? 0 ?>"></label>
-        <label>Аромат <input type="text" name="aroma" value="<?= e($edit['aroma'] ?? '') ?>"></label>
         <label>Вес (г) <input type="number" name="weight" value="<?= $edit['weight'] ?? 0 ?>"></label>
         <label>Описание <textarea name="description" rows="4"><?= e($edit['description'] ?? '') ?></textarea></label>
 
-        <label>Изображение
+        <label>Фото
           <input type="file" name="image" accept="image/*">
           <?php if(!empty($edit['image'])): ?>
             <br><img src="<?= product_image($edit['image']) ?>" style="max-width:120px;margin-top:8px">
           <?php endif; ?>
         </label>
 
-        <label class="checkbox"><input type="checkbox" name="active" <?= ($edit['active'] ?? 1) ? 'checked' : '' ?>> Активен</label>
-
-        <button class="btn btn-primary">Сохранить</button>
+        <label class="checkbox"><input type="checkbox" name="active" <?= ($edit['active'] ?? 1) ? 'checked' : '' ?>> Активен </label>
+            
+            <button class="btn btn-primary">Сохранить</button>
         <a href="?action=products" class="btn btn-ghost">Отмена</a>
       </form>
     <?php endif; ?>
 
     <table class="admin-table">
-      <thead><tr><th>ИЗО</th><th>Название</th><th>Категория</th><th>Цена</th><th>Остаток</th><th>Статус</th><th></th></tr></thead>
+      <thead><tr><th>Фото</th><th>Название</th><th>Категория</th><th>Цена</th><th>Остаток</th><th>Статус</th><th>Действия</th></tr></thead>
       <tbody>
       <?php foreach($products as $p): ?>
         <tr>

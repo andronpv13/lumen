@@ -46,7 +46,7 @@ function render_categories_page($isMod = false, $editId = null) {
     </form>
 
     <table class="admin-table">
-      <thead><tr><th>ID</th><th>Название</th><th>Идентификатор</th><th>Товаров</th><th></th></tr></thead>
+      <thead><tr><th>ID</th><th>Название</th><th>Идентификатор</th><th>Товаров</th><th>Действия</th></tr></thead>
       <tbody>
       <?php foreach($categories as $c): ?>
         <tr>
