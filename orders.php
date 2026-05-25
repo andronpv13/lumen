@@ -1,14 +1,19 @@
 <?php
-// orders.php
-require_once __DIR__ . '/includes/functions.php';
-require_login();
-$user = current_user();
+// orders.php - может использоваться как отдельно, так и включаться в users.php
+if (!isset($user)) {
+    require_once __DIR__ . '/includes/functions.php';
+    require_login();
+    $user = current_user();
+    $standalone = true;
+} else {
+    $standalone = false;
+}
 
 $orders = db()->prepare("SELECT * FROM orders WHERE user_id=? ORDER BY created_at DESC");
 $orders->execute([$user['id']]);
 $orders = $orders->fetchAll();
 
-$orderId = (int)($_GET['id'] ?? 0);
+$orderId = (int)($_GET['order_id'] ?? $_GET['id'] ?? 0);
 $detail = null;
 $detailItems = [];
 if ($orderId) {
@@ -22,18 +27,21 @@ if ($orderId) {
     }
 }
 
-$pageTitle = 'Мои заказы';
-require __DIR__ . '/includes/header.php';
 $statusLabels = ['new'=>'Новый','processing'=>'В обработке','paid'=>'Оплачен','shipped'=>'Отправлен','delivered'=>'Доставлен','cancelled'=>'Отменён'];
+
+if ($standalone) {
+    $pageTitle = 'Мои заказы';
+    require __DIR__ . '/includes/header.php';
+    ?>
+    <h1><?= $detail ? 'Детали заказа' : 'Мои заказы' ?></h1>
+    <?php
+}
 ?>
 
-<h1><?= $detail ? 'Детали заказа' : 'Мои заказы' ?></h1>
-
 <?php if($detail): ?>
-  <a href="/orders.php" class="back">← Все заказы</a>
   <div class="order-detail">
-    <h2>Заказ №<?= $detail['id'] ?></h2>
-    <p><strong>Статус:</strong> <?= $statusLabels[$detail['status']] ?? $detail['status'] ?></p>
+    <p><strong>Заказ №<?= $detail['id'] ?></strong></p>
+    <p><strong>Статус:</strong> <?= e($statusLabels[$detail['status']] ?? $detail['status']) ?></p>
     <p><strong>Дата:</strong> <?= date('d.m.Y H:i', strtotime($detail['created_at'])) ?></p>
     <p><strong>Адрес:</strong> <?= e($detail['shipping_address']) ?></p>
     <table class="cart-table">
@@ -65,7 +73,7 @@ $statusLabels = ['new'=>'Новый','processing'=>'В обработке','paid
           <td><?= money($o['total']) ?></td>
           <td><span class="status status-<?= $o['status'] ?>"><?= $statusLabels[$o['status']] ?? $o['status'] ?></span></td>
           <td><?= $o['payment_status']==='paid'?'Оплачен':'Ожидает' ?></td>
-          <td><a href="/orders.php?id=<?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a></td>
+          <td><a href="<?= $standalone ? '/orders.php?id=' : '/users.php?tab=orders&order_id=' ?><?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a></td>
         </tr>
       <?php endforeach; ?>
       </tbody>
@@ -73,4 +81,6 @@ $statusLabels = ['new'=>'Новый','processing'=>'В обработке','paid
   <?php endif; ?>
 <?php endif; ?>
 
+<?php if ($standalone): ?>
 <?php require __DIR__ . '/includes/footer.php'; ?>
+<?php endif; ?>

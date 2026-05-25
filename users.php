@@ -5,6 +5,20 @@ require_login();
 $user = current_user();
 $tab = $_GET['tab'] ?? 'profile';
 $action = $_POST['action'] ?? '';
+$orderId = (int)($_GET['order_id'] ?? 0);
+
+// Определение заголовка страницы в зависимости от вкладки и наличия заказа
+if ($orderId && $tab === 'orders') {
+    $pageTitle = 'Детали заказа';
+} elseif ($tab === 'profile') {
+    $pageTitle = 'Данные профиля';
+} elseif ($tab === 'orders') {
+    $pageTitle = 'Мои заказы';
+} elseif ($tab === 'reviews') {
+    $pageTitle = 'Отзывы на купленные товары';
+} else {
+    $pageTitle = 'Профиль пользователя';
+}
 
 // Загрузка профиля доставки
 $deliveryProfile = null;
@@ -109,10 +123,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$orderStmt = db()->prepare("SELECT * FROM orders WHERE user_id=? ORDER BY created_at DESC");
-$orderStmt->execute([$user['id']]);
-$orders = $orderStmt->fetchAll();
-
 $itemStmt = db()->prepare(
     "SELECT oi.product_id, oi.name, oi.price, oi.quantity, o.created_at
      FROM order_items oi
@@ -138,22 +148,13 @@ $reviewedListStmt = db()->prepare(
 $reviewedListStmt->execute([$user['id']]);
 $userReviews = $reviewedListStmt->fetchAll();
 
-$statusLabels = [
-    'new' => 'Новый',
-    'processing' => 'В обработке',
-    'paid' => 'Оплачен',
-    'shipped' => 'Отправлен',
-    'delivered' => 'Доставлен',
-    'cancelled' => 'Отменён',
-];
-
-$pageTitle = 'Мой аккаунт';
+$sidebarTitle = 'Мой аккаунт';
 require __DIR__ . '/includes/header.php';
 ?>
 
 <div class="admin-layout">
   <aside class="admin-sidebar">
-    <h3>Мой аккаунт</h3>
+    <h3><?= e($sidebarTitle) ?></h3>
     <nav>
       <a href="/users.php?tab=profile" class="<?= $tab==='profile'?'active':'' ?>">Профиль</a>
       <a href="/users.php?tab=orders" class="<?= $tab==='orders'?'active':'' ?>">Заказы</a>
@@ -161,11 +162,10 @@ require __DIR__ . '/includes/header.php';
     </nav>
   </aside>
   <section class="admin-main">
-    <h1>Мой аккаунт</h1>
+    <h2><?= e($pageTitle) ?></h2>
 
     <?php if ($tab === 'profile'): ?>
   <section class="account-panel">
-    <h2>Данные профиля</h2>
     <form method="post" class="admin-form">
       <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
       <input type="hidden" name="action" value="save_profile">
@@ -200,31 +200,9 @@ require __DIR__ . '/includes/header.php';
     </form>
   </section>
 <?php elseif ($tab === 'orders'): ?>
-  <section class="account-panel">
-    <h2>Мои заказы</h2>
-    <?php if (!$orders): ?>
-      <p class="empty">У вас ещё нет заказов. <a href="/">Перейти в каталог</a></p>
-    <?php else: ?>
-      <table class="cart-table">
-        <thead><tr><th>№</th><th>Дата</th><th>Сумма</th><th>Статус</th><th>Оплата</th><th></th></tr></thead>
-        <tbody>
-        <?php foreach ($orders as $o): ?>
-          <tr>
-            <td>№<?= $o['id'] ?></td>
-            <td><?= date('d.m.Y', strtotime($o['created_at'])) ?></td>
-            <td><?= money($o['total']) ?></td>
-            <td><?= e($statusLabels[$o['status']] ?? $o['status']) ?></td>
-            <td><?= $o['payment_status'] === 'paid' ? 'Оплачен' : 'Ожидает' ?></td>
-            <td><a href="/orders.php?id=<?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a></td>
-          </tr>
-        <?php endforeach; ?>
-        </tbody>
-      </table>
-    <?php endif; ?>
-  </section>
+  <?php include __DIR__ . '/orders.php'; ?>
 <?php elseif ($tab === 'reviews'): ?>
   <section class="account-panel">
-    <h2>Отзывы на купленные товары</h2>
     <?php if (!$orderedItems): ?>
       <p class="empty">Нет купленных товаров для отзыва. Оформите заказ, чтобы оставить отзыв.</p>
     <?php else: ?>
