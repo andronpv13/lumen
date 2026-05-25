@@ -77,12 +77,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_review'])) {
 if (empty($errors) || !isset($_POST['save_review'])) {
     // Получение заказанных товаров для возможности оставлять отзывы
     $orderedItemsStmt = db()->prepare("
-        SELECT DISTINCT p.id, p.name, p.image, o.id as order_id
+        SELECT DISTINCT p.id, p.name, p.image AS image_url, o.id as order_id, MAX(o.created_at) as latest_order_date
         FROM products p
         JOIN order_items oi ON p.id = oi.product_id
         JOIN orders o ON oi.order_id = o.id
         WHERE o.user_id = ? AND o.status != 'cancelled'
-        ORDER BY o.created_at DESC
+        GROUP BY p.id, p.name, p.image, o.id
+        ORDER BY latest_order_date DESC
     ");
     $orderedItemsStmt->execute([$user['id']]);
     $orderedItems = $orderedItemsStmt->fetchAll();
@@ -187,4 +188,3 @@ function toggleReviewForm(productId) {
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
 </script>
-?>
