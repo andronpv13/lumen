@@ -74,22 +74,6 @@ require __DIR__ . '/includes/header.php';
 
 <section class="reviews-section">
   <h2>Отзывы</h2>
-  <?php if(current_user()): ?>
-    <form method="post" class="review-form">
-      <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
-      <input type="hidden" name="action" value="review">
-      <div class="star-input" id="starInput">
-        <?php for($i=1;$i<=5;$i++): ?>
-          <span data-val="<?= $i ?>">★</span>
-        <?php endfor; ?>
-        <input type="hidden" name="rating" id="ratingInput" value="5" required>
-      </div>
-      <textarea name="comment" placeholder="Ваш отзыв..." required></textarea>
-      <button class="btn btn-primary">Отправить отзыв</button>
-    </form>
-  <?php else: ?>
-    <p><a href="/auth.php">Войдите</a>, чтобы оставить отзыв.</p>
-  <?php endif; ?>
 
   <div class="reviews-list">
     <?php if(!$reviews): ?>
@@ -98,7 +82,7 @@ require __DIR__ . '/includes/header.php';
       <article class="review">
         <header>
           <strong><?= e($r['name']) ?></strong>
-          <span class="stars"><?php for($i=1;$i<=5;$i++): ?><span class="<?= $i<=$r['rating']?'star-filled':'star-empty' ?>">★</span><?php endfor; ?></span>
+          <span class="stars"><?php for($i=1;$i<=$r['rating'];$i++): ?><span class="star-filled">★</span><?php endfor; ?></span>
           <time><?= date('d.m.Y', strtotime($r['created_at'])) ?></time>
         </header>
         <p><?= nl2br(e($r['comment'])) ?></p>
@@ -106,16 +90,5 @@ require __DIR__ . '/includes/header.php';
     <?php endforeach; endif; ?>
   </div>
 </section>
-
-<script>
-const si = document.getElementById('starInput');
-if (si) {
-  const stars = si.querySelectorAll('span[data-val]');
-  const input = document.getElementById('ratingInput');
-  function paint(v){ stars.forEach(s=>s.classList.toggle('active', +s.dataset.val<=v)); }
-  paint(+input.value);
-  stars.forEach(s=>s.addEventListener('click',()=>{ input.value=s.dataset.val; paint(+s.dataset.val); }));
-}
-</script>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>

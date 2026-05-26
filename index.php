@@ -20,8 +20,10 @@ $reviews = db()->prepare("
         r.id,
         r.comment AS text,
         r.rating,
+        r.created_at,
         u.name AS author_name,
-        p.name AS product_name
+        p.name AS product_name,
+        p.id AS product_id
     FROM reviews r
     LEFT JOIN users u ON r.user_id=u.id
     LEFT JOIN products p ON r.product_id=p.id
@@ -56,16 +58,17 @@ require __DIR__ . '/includes/header.php';
     <?php foreach($reviews as $review): ?>
       <div class="review-card">
         <div class="review-card__info">
-          <h3><?= e($review['product_name']) ?></h3>
+          <h3><a href="product.php?id=<?= $review['product_id'] ?>"><?= e($review['product_name']) ?></a></h3>
           <div class="rating-stars">
-            <?php for ($i = 1; $i <= 5; $i++): ?>
-              <span class="star <?= $i <= $review['rating'] ? 'star-filled' : 'star-empty' ?>">★</span>
+            <?php for ($i = 1; $i <= $review['rating']; $i++): ?>
+              <span class="star star-filled">★</span>
             <?php endfor; ?>
           </div>
         </div>
         <p class="review-text"><?= e($review['text']) ?></p>
         <div class="review-footer">
           <span class="author"><?= e($review['author_name']) ?></span>
+          <time class="muted small"><?= date('d.m.Y', strtotime($review['created_at'])) ?></time>
         </div>
       </div>
     <?php endforeach; ?>

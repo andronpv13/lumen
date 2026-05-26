@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_review'])) {
             $insertReviewStmt->execute([$user['id'], $productId, $rating, $comment]);
         }
 
-        $success = "Отзыв успешно сохранён!";
+        $success = "Ваш отзыв будет проверен системой и будет опубликован";
     }
 }
 
@@ -97,7 +97,7 @@ if (empty($errors) || !isset($_POST['save_review'])) {
 
     // Получение своих отзывов для отображения
     $userReviewsStmt = db()->prepare("
-        SELECT r.*, p.name as product_name, p.image as product_image
+        SELECT r.*, p.name as product_name, p.id as product_id, p.image as product_image
         FROM reviews r
         JOIN products p ON r.product_id = p.id
         WHERE r.user_id = ?
@@ -177,10 +177,10 @@ if (empty($errors) || !isset($_POST['save_review'])) {
         <?php foreach ($userReviews as $review): ?>
             <div class="review-card">
                 <div class="review-card__info">
-                    <h3><?= e($review['product_name']) ?></h3>
+                    <h3><a href="product.php?id=<?= $review['product_id'] ?>"><?= e($review['product_name']) ?></a></h3>
                     <div class="rating-stars">
-                        <?php for ($i = 1; $i <= 5; $i++): ?>
-                            <span class="star <?= $i <= $review['rating'] ? 'star-filled' : 'star-empty' ?>">★</span>
+                        <?php for ($i = 1; $i <= $review['rating']; $i++): ?>
+                            <span class="star star-filled">★</span>
                         <?php endfor; ?>
                     </div>
                 </div>
