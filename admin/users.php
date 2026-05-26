@@ -1,19 +1,5 @@
 <?php
 // admin/users.php - Управление пользователями
-require_once __DIR__ . '/../includes/repositories/UserRepository.php';
-
-/**
- * Получить пользователя по ID (если не загружен из functions.php)
- */
-if (!function_exists('get_user_by_id')) {
-    function get_user_by_id($id) {
-        $db = db();
-        $stmt = $db->prepare("SELECT * FROM users WHERE id=?");
-        $stmt->execute([$id]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result ?: null;
-    }
-}
 
 /**
  * Отобразить страницу управления пользователями
@@ -26,7 +12,7 @@ function render_users_page($isMod = false, $editId = null) {
         return;
     }
 
-    $users = get_all_users();
+    $users = UserRepository::getAll();
     $edit = null;
 
     if ($editId) {

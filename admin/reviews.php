@@ -1,23 +1,5 @@
 <?php
 // admin/reviews.php - Управление отзывами (модерация)
-require_once __DIR__ . '/../includes/repositories/ReviewRepository.php';
-
-/**
- * Получить все отзывы (если не загружен из functions.php или repositories)
- */
-if (!function_exists('get_all_reviews')) {
-    function get_all_reviews($approved = null) {
-        $db = db();
-        if ($approved === null) {
-            $stmt = $db->prepare("SELECT r.*, p.name as product_name, u.name as user_name FROM reviews r JOIN products p ON r.product_id=p.id JOIN users u ON r.user_id=u.id ORDER BY r.created_at DESC");
-            $stmt->execute();
-        } else {
-            $stmt = $db->prepare("SELECT r.*, p.name as product_name, u.name as user_name FROM reviews r JOIN products p ON r.product_id=p.id JOIN users u ON r.user_id=u.id WHERE r.approved=? ORDER BY r.created_at DESC");
-            $stmt->execute([$approved]);
-        }
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-}
 
 /**
  * Отобразить страницу модерации отзывов

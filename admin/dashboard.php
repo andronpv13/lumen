@@ -2,21 +2,6 @@
 // admin/dashboard.php - Панель управления (дашборд)
 
 /**
- * Получить метки статусов заказов (если не загружен из functions.php)
- */
-if (!function_exists('get_order_status_labels')) {
-    function get_order_status_labels() {
-        return [
-            'new' => 'Новый',
-            'processing' => 'В обработке',
-            'shipped' => 'Отправлен',
-            'delivered' => 'Доставлен',
-            'cancelled' => 'Отменён',
-        ];
-    }
-}
-
-/**
  * Отобразить дашборд администратора/модератора
  * @param array $user Данные текущего пользователя
  * @param bool $isMod Является ли модератором

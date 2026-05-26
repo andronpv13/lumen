@@ -79,8 +79,8 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         $validPaymentStatuses = ['pending','paid','failed'];
         $status = in_array($_POST['status'] ?? '', $validStatuses, true) ? $_POST['status'] : 'new';
         $paymentStatus = in_array($_POST['payment_status'] ?? '', $validPaymentStatuses, true) ? $_POST['payment_status'] : 'pending';
-        db()->prepare("UPDATE orders SET status=?, payment_status=? WHERE id=?")
-            ->execute([$status, $paymentStatus, (int)$_POST['id']]);
+        OrderRepository::updateStatus((int)$_POST['id'], $status);
+        OrderRepository::updatePaymentStatus((int)$_POST['id'], $paymentStatus);
         flash('Заказ обновлён','success'); redirect('?action=orders');
     }
     if ($act === 'order_delete' && !$isMod) {
@@ -274,7 +274,7 @@ elseif ($action === 'account'):
 // ===== MY ORDERS =====
 elseif ($action === 'my_orders'):
     $statusLabels = get_order_status_labels();
-    $myOrders = get_orders_by_user($user['id']);
+    $myOrders = OrderRepository::getByUser($user['id']);
 ?>
     <h1>Мои заказы</h1>
     <?php if (!$myOrders): ?>

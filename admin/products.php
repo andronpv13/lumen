@@ -1,20 +1,5 @@
 <?php
 // admin/products.php - Управление товарами
-require_once __DIR__ . '/../includes/repositories/ProductRepository.php';
-require_once __DIR__ . '/../includes/repositories/CategoryRepository.php';
-
-/**
- * Получить товар по ID (если не загружен из functions.php)
- */
-if (!function_exists('get_product_by_id')) {
-    function get_product_by_id($id) {
-        $db = db();
-        $stmt = $db->prepare("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id=c.id WHERE p.id=?");
-        $stmt->execute([$id]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result ?: null;
-    }
-}
 
 /**
  * Сохранить товар (создать или обновить)
@@ -110,7 +95,7 @@ function render_products_page($isMod = false, $editId = null) {
         </label>
 
         <label class="checkbox"><input type="checkbox" name="active" <?= ($edit['active'] ?? 1) ? 'checked' : '' ?>> Активен </label>
-            
+
             <button class="btn btn-primary">Сохранить</button>
         <a href="?action=products" class="btn btn-ghost">Отмена</a>
       </form>

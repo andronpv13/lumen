@@ -3,33 +3,6 @@
 // Все необходимые функции уже загружены в admin.php через functions.php и includes/repositories
 
 /**
- * Получить элементы заказа (если не загружен из functions.php)
- */
-if (!function_exists('get_order_items')) {
-    function get_order_items($orderId) {
-        $db = db();
-        $stmt = $db->prepare("SELECT * FROM order_items WHERE order_id=? ORDER BY id");
-        $stmt->execute([$orderId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-}
-
-/**
- * Получить метки статусов заказов (если не загружен из functions.php)
- */
-if (!function_exists('get_order_status_labels')) {
-    function get_order_status_labels() {
-        return [
-            'new' => 'Новый',
-            'processing' => 'В обработке',
-            'shipped' => 'Отправлен',
-            'delivered' => 'Доставлен',
-            'cancelled' => 'Отменён',
-        ];
-    }
-}
-
-/**
  * Отобразить страницу управления заказами
  * @param bool $isMod Является ли модератором
  * @param int|null $viewId ID заказа для просмотра деталей
@@ -44,7 +17,8 @@ function render_orders_page($isMod = false, $viewId = null) {
     ];
 
     if ($viewId) {
-        $view = get_order_by_id($viewId);
+        $view = OrderRepository::getById($viewId);
+        // get_order_items остаётся функцией в functions.php, так как возвращает элементы заказа с данными товаров
         $viewItems = get_order_items($viewId);
 
         if (!$view) {
@@ -101,7 +75,7 @@ function render_orders_page($isMod = false, $viewId = null) {
 <?php
     } else {
         // Получаем все заказы, исключая заказы текущего админа
-        $allOrders = get_all_orders();
+        $allOrders = OrderRepository::getAll();
         $orders = array_filter($allOrders, function($o) use ($user) {
             return (int)$o['user_id'] !== (int)$user['id'];
         });

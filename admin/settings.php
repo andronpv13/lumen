@@ -2,21 +2,6 @@
 // admin/settings.php - Настройки магазина (только админ)
 
 /**
- * Получить настройку (если не загружен из functions.php)
- */
-if (!function_exists('setting')) {
-    function setting($key, $default = '') {
-        static $cache = null;
-        if ($cache === null) {
-            $db = db();
-            $rows = $db->query("SELECT `key`, `value` FROM settings")->fetchAll(PDO::FETCH_KEY_PAIR);
-            $cache = $rows;
-        }
-        return $cache[$key] ?? $default;
-    }
-}
-
-/**
  * Отобразить страницу настроек магазина
  * @param bool $isMod Является ли модератором (модераторы не имеют доступа)
  */

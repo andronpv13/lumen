@@ -1,19 +1,5 @@
 <?php
 // admin/categories.php - Управление категориями (только админ)
-require_once __DIR__ . '/../includes/repositories/CategoryRepository.php';
-
-/**
- * Получить категорию по ID (если не загружен из functions.php)
- */
-if (!function_exists('get_category_by_id')) {
-    function get_category_by_id($id) {
-        $db = db();
-        $stmt = $db->prepare("SELECT c.*, (SELECT COUNT(*) FROM products WHERE category_id=c.id) as products_count FROM categories c WHERE c.id=?");
-        $stmt->execute([$id]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result ?: null;
-    }
-}
 
 /**
  * Отобразить страницу управления категориями

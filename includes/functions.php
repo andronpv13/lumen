@@ -10,6 +10,9 @@ foreach (glob(__DIR__ . '/repositories/*.php') as $file) {
     require_once $file;
 }
 
+// Подключаем шаблоны HTML-блоков
+require_once __DIR__ . '/partials/templates.php';
+
 function e($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
 function setting(string $key, $default = '') {
@@ -156,4 +159,17 @@ function get_order_items(int $orderId): array {
     $stmt = db()->prepare("SELECT * FROM order_items WHERE order_id=?");
     $stmt->execute([$orderId]);
     return $stmt->fetchAll();
+}
+
+/**
+ * Получить пользователя по ID
+ * @param int $id ID пользователя
+ * @return array|null Данные пользователя или null
+ */
+function get_user_by_id($id) {
+    $db = db();
+    $stmt = $db->prepare("SELECT * FROM users WHERE id=?");
+    $stmt->execute([$id]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result ?: null;
 }
