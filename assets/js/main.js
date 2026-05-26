@@ -116,3 +116,324 @@ function togglePassword(inputId) {
     input.type = input.type === 'password' ? 'text' : 'password';
   }
 }
+
+/**
+ * checkout.php - Выбор платёжной карты
+ */
+document.addEventListener('DOMContentLoaded', function() {
+  var cards = document.querySelectorAll('.payment-card');
+  cards.forEach(function(card) {
+    var input = card.querySelector('input[type="radio"]');
+    if (!input) return;
+
+    input.addEventListener('change', function() {
+      if (input.checked) {
+        cards.forEach(function(c) { c.classList.remove('active'); });
+        card.classList.add('active');
+      }
+    });
+
+    card.addEventListener('click', function() {
+      input.checked = true;
+      cards.forEach(function(c) { c.classList.remove('active'); });
+      card.classList.add('active');
+    });
+  });
+});
+
+/**
+ * users/reviews.php - Работа с отзывами
+ */
+function toggleReviewForm(productId) {
+    const form = document.getElementById('review-form-' + productId);
+    if (form) {
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
+function setRating(productId, rating) {
+    // Устанавливаем значение в скрытый input
+    const ratingInput = document.getElementById('rating_' + productId);
+    if (ratingInput) {
+        ratingInput.value = rating;
+    }
+
+    // Обновляем визуальное отображение звёзд
+    const container = document.getElementById('star-rating-' + productId);
+    if (!container) return;
+
+    const stars = container.querySelectorAll('span');
+
+    stars.forEach(function(star) {
+        const value = parseInt(star.getAttribute('data-value'));
+        if (value <= rating) {
+            star.classList.add('active');
+        } else {
+            star.classList.remove('active');
+        }
+    });
+}
+
+// Инициализация: устанавливаем 5 звёзд по умолчанию при открытии формы
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('.review-form');
+    forms.forEach(function(form) {
+        const productId = form.id.replace('review-form-', '');
+        setRating(productId, 5);
+    });
+});
+
+/**
+ * auth.php - Валидация формы регистрации
+ */
+(function(){
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  function initRegistrationValidation() {
+    const nameInput = document.getElementById('register-name');
+    const emailInput = document.getElementById('register-email');
+    const passwordInput = document.getElementById('register-password');
+    const confirmInput = document.getElementById('register-confirm-password');
+    const submitButton = document.getElementById('register-submit');
+
+    if (!nameInput || !emailInput || !passwordInput || !confirmInput || !submitButton) {
+      return;
+    }
+
+    const hints = {
+      name: document.getElementById('hint-name'),
+      email: document.getElementById('hint-email'),
+      password: document.getElementById('hint-password'),
+      confirm: document.getElementById('hint-confirm-password')
+    };
+
+    // Состояние валидации для каждого поля
+    const validationState = {
+      name: { valid: false, checked: false },
+      email: { valid: false, checked: false },
+      password: { valid: false, checked: false },
+      confirm: { valid: false, checked: false }
+    };
+
+    function setState(input, valid, message, forceInvalid) {
+      forceInvalid = forceInvalid || false;
+      const wrap = input.closest('.field-input-wrap');
+      const invalid = !valid && forceInvalid;
+      if (wrap) {
+        wrap.classList.toggle('input-valid', valid);
+        wrap.classList.toggle('input-invalid', invalid);
+      }
+      input.classList.toggle('input-valid', valid);
+      input.classList.toggle('input-invalid', invalid);
+      const field = input.dataset.field;
+      const hint = hints[field];
+      if (hint) {
+        hint.textContent = message || '';
+      }
+      // Обновляем состояние валидации
+      if (field && validationState[field]) {
+        validationState[field].valid = valid;
+        validationState[field].checked = true;
+      }
+    }
+
+    function validateNoSpaces(value) {
+      return !/[\s\t]/.test(value);
+    }
+
+    function updateSubmitState() {
+      // Проверяем, что все поля прошли валидацию и проверку на занятость
+      const allValid = Object.values(validationState).every(state => state.valid && state.checked);
+      submitButton.disabled = !allValid;
+    }
+
+    function checkField(input, showEmptyAsValid) {
+      showEmptyAsValid = showEmptyAsValid || false;
+      if (!input) return { valid: false };
+      const field = input.dataset.field;
+      const rawValue = input.value;
+      const value = rawValue.trim();
+      let valid = true;
+      let message = '';
+      let forceInvalid = false;
+
+      if (!validateNoSpaces(rawValue)) {
+        valid = false;
+        message = 'Пробелы и табы запрещены';
+        forceInvalid = true;
+      } else if (!value) {
+        valid = false;
+        message = showEmptyAsValid ? '' : 'Поле не может быть пустым';
+      } else if (field === 'name') {
+        if (value.length < 4) {
+          valid = false;
+          message = 'Минимум 4 символа';
+          forceInvalid = true;
+        }
+      } else if (field === 'email') {
+        if (/\s/.test(rawValue)) {
+          valid = false;
+          message = 'Пробелы и табы запрещены';
+          forceInvalid = true;
+        } else if (!emailPattern.test(value)) {
+          valid = false;
+          message = 'Неверный формат email';
+          forceInvalid = true;
+        }
+      } else if (field === 'password') {
+        if (value.length < 6) {
+          valid = false;
+          message = 'Минимум 6 символов';
+          forceInvalid = true;
+        }
+      } else if (field === 'confirm') {
+        if (value !== passwordInput.value) {
+          valid = false;
+          message = 'Пароли не совпадают';
+          forceInvalid = true;
+        }
+      }
+
+      setState(input, valid, message, forceInvalid);
+      return { valid, message };
+    }
+
+    function checkAvailability(input, type) {
+      const value = input.value.trim();
+      if (!value || !validateNoSpaces(input.value)) return;
+      if (type === 'email' && !emailPattern.test(value)) return;
+
+      fetch('?check=' + type + '&value=' + encodeURIComponent(value), { credentials: 'same-origin' })
+        .then(res => res.json())
+        .then(data => {
+          if (!data.ok) {
+            // Если сервер вернул ошибку формата или наличия пробелов
+            const field = input.dataset.field;
+            if (validationState[field]) {
+              validationState[field].checked = true;
+            }
+            updateSubmitState();
+            return;
+          }
+          if (data.exists) {
+            // Поле занято - подсвечиваем красным, показываем сообщение
+            setState(input, false, type === 'email' ? 'Email уже занят' : 'Имя занято', true);
+          } else {
+            // Поле свободно - проверяем общую валидность
+            const result = checkField(input);
+            if (result.valid) {
+              setState(input, true, type === 'email' ? 'Email свободен' : 'Имя доступно');
+            }
+          }
+          updateSubmitState();
+        })
+        .catch(() => {
+          // Ошибка запроса - помечаем как проверенное, но невалидное
+          const field = input.dataset.field;
+          if (validationState[field]) {
+            validationState[field].checked = true;
+          }
+          updateSubmitState();
+        });
+    }
+
+    emailInput.dataset.field = 'email';
+    nameInput.dataset.field = 'name';
+    passwordInput.dataset.field = 'password';
+    confirmInput.dataset.field = 'confirm';
+
+    // Обработчик кнопок "глаз" для показа/скрытия пароля
+    document.querySelectorAll('.field-toggle').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const targetId = this.getAttribute('data-target');
+        const input = document.getElementById(targetId);
+        if (!input) return;
+
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+
+        // Переключаем видимость иконок
+        const openIcon = this.querySelector('.icon-eye-open');
+        const closedIcon = this.querySelector('.icon-eye-closed');
+
+        if (isPassword) {
+          // Показываем пароль - скрываем открытый глаз, показываем зачёркнутый
+          if (openIcon) openIcon.style.display = 'none';
+          if (closedIcon) closedIcon.style.display = 'block';
+          this.setAttribute('aria-label', 'Скрыть пароль');
+          this.setAttribute('title', 'Скрыть пароль');
+        } else {
+          // Скрываем пароль - показываем открытый глаз, скрываем зачёркнутый
+          if (openIcon) openIcon.style.display = 'block';
+          if (closedIcon) closedIcon.style.display = 'none';
+          this.setAttribute('aria-label', 'Показать пароль');
+          this.setAttribute('title', 'Показать пароль');
+        }
+      });
+    });
+
+    const debounced = (fn, delay) => {
+      delay = delay || 300;
+      let timeout;
+      return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn.apply(this, args), delay);
+      };
+    };
+
+    nameInput.addEventListener('input', debounced(() => {
+      const result = checkField(nameInput, true);
+      if (result.valid) {
+        checkAvailability(nameInput, 'name');
+      } else {
+        // Если формат невалиден, всё равно помечаем как проверенное
+        validationState.name.checked = true;
+        updateSubmitState();
+      }
+    }));
+
+    emailInput.addEventListener('input', debounced(() => {
+      const result = checkField(emailInput, true);
+      if (result.valid) {
+        checkAvailability(emailInput, 'email');
+      } else {
+        // Если формат невалиден, всё равно помечаем как проверенное
+        validationState.email.checked = true;
+        updateSubmitState();
+      }
+    }));
+
+    passwordInput.addEventListener('input', () => {
+      checkField(passwordInput, true);
+      if (confirmInput.value) checkField(confirmInput, true);
+      updateSubmitState();
+    });
+
+    confirmInput.addEventListener('input', () => {
+      checkField(confirmInput, true);
+      updateSubmitState();
+    });
+
+    // Изначально кнопка заблокирована
+    submitButton.disabled = true;
+
+    submitButton.addEventListener('click', function(event) {
+      const fields = [nameInput, emailInput, passwordInput, confirmInput];
+      let allValid = true;
+      fields.forEach(input => {
+        const result = checkField(input, false);
+        if (!result.valid) allValid = false;
+      });
+      if (!allValid) {
+        event.preventDefault();
+      }
+    });
+  }
+
+  // Инициализация после загрузки DOM
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initRegistrationValidation);
+  } else {
+    initRegistrationValidation();
+  }
+})();

@@ -128,25 +128,4 @@ require __DIR__ . '/includes/header.php';
   </aside>
 </div>
 
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var cards = document.querySelectorAll('.payment-card');
-    cards.forEach(function(card) {
-      var input = card.querySelector('input[type="radio"]');
-      input.addEventListener('change', function() {
-        if (input.checked) {
-          cards.forEach(function(c) { c.classList.remove('active'); });
-          card.classList.add('active');
-        }
-      });
-
-      card.addEventListener('click', function() {
-        input.checked = true;
-        cards.forEach(function(c) { c.classList.remove('active'); });
-        card.classList.add('active');
-      });
-    });
-  });
-</script>
-
 <?php require __DIR__ . '/includes/footer.php'; ?>

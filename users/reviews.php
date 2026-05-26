@@ -195,37 +195,3 @@ if (empty($errors) || !isset($_POST['save_review'])) {
 <?php endif; ?>
 
 </div><!-- /.admin-content-block -->
-
-<script>
-function toggleReviewForm(productId) {
-    const form = document.getElementById('review-form-' + productId);
-    form.style.display = form.style.display === 'none' ? 'block' : 'none';
-}
-
-function setRating(productId, rating) {
-    // Устанавливаем значение в скрытый input
-    document.getElementById('rating_' + productId).value = rating;
-
-    // Обновляем визуальное отображение звёзд
-    const container = document.getElementById('star-rating-' + productId);
-    const stars = container.querySelectorAll('span');
-
-    stars.forEach(function(star) {
-        const value = parseInt(star.getAttribute('data-value'));
-        if (value <= rating) {
-            star.classList.add('active');
-        } else {
-            star.classList.remove('active');
-        }
-    });
-}
-
-// Инициализация: устанавливаем 5 звёзд по умолчанию при открытии формы
-document.addEventListener('DOMContentLoaded', function() {
-    const forms = document.querySelectorAll('.review-form');
-    forms.forEach(function(form) {
-        const productId = form.id.replace('review-form-', '');
-        setRating(productId, 5);
-    });
-});
-</script>
