@@ -109,7 +109,7 @@ $pageTitle = 'Оформление заказа';
       </label>
     </div>
 
-    <button class="btn btn-primary btn-lg">Подтвердить заказ</button>
+    <button class="btn btn-ghost btn-lg">Подтвердить заказ</button>
   </form>
 
   <aside class="order-summary">

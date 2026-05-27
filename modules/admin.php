@@ -266,7 +266,7 @@ elseif ($action === 'account'):
         <label>Текущий пароль <input type="password" name="current_password" placeholder="Оставьте пустым, если не меняете пароль"></label>
         <label>Новый пароль <input type="password" name="password" placeholder="Оставьте пустым, чтобы не менять"></label>
       </div>
-      <button class="btn btn-primary">Сохранить профиль</button>
+      <button class="btn btn-ghost">Сохранить профиль</button>
     </form>
 
 <?php

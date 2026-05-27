@@ -36,5 +36,5 @@ $formAction = $formAction ?? '';
     </div>
   </div>
 
-  <button type="submit" class="btn btn-primary">Сохранить</button>
+  <button type="submit" class="btn btn-ghost">Сохранить</button>
 </form>

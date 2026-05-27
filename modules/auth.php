@@ -105,7 +105,7 @@ $pageTitle = 'Вход / Регистрация';
       <input type="hidden" name="mode" value="login">
       <label>Логин или Email <input type="text" name="identifier" required></label>
       <label>Пароль <input type="password" name="password" required></label>
-      <button class="btn btn-primary">Войти</button>
+      <button class="btn btn-ghost">Войти</button>
       <p class="muted small">Тест: admin@lumen.ru / admin123</p>
     </form>
   <?php else: ?>
@@ -149,7 +149,7 @@ $pageTitle = 'Вход / Регистрация';
         <div class="field-hint" id="hint-confirm-password"></div>
       </label>
 
-      <button class="btn btn-primary" id="register-submit">Создать аккаунт</button>
+      <button class="btn btn-ghost" id="register-submit">Создать аккаунт</button>
     </form>
   <?php endif; ?>
 </div>

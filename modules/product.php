@@ -64,7 +64,7 @@ $pageTitle = $p['name'];
         <input type="hidden" name="action" value="add">
         <input type="hidden" name="id" value="<?= $p['id'] ?>">
         <input type="number" name="qty" value="1" min="1" max="<?= $p['stock'] ?>">
-        <button class="btn btn-primary">В корзину</button>
+        <button class="btn btn-ghost">В корзину</button>
       </form>
     <?php else: ?>
       <p class="out-of-stock">Товара нет в наличии</p>

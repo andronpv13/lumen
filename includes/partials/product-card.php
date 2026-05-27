@@ -20,7 +20,7 @@
           <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
           <input type="hidden" name="action" value="add">
           <input type="hidden" name="id" value="<?= $p['id'] ?>">
-          <button class="btn btn-primary btn-sm">В корзину</button>
+          <button class="btn btn-ghost btn-sm">В корзину</button>
         </form>
       <?php else: ?>
         <span class="out-of-stock">Нет в наличии</span>

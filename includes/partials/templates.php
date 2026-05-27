@@ -313,7 +313,7 @@ function render_product_form($product, $categories, $imageCurrent = '') {
         Активен
       </label>
 
-      <button type="submit" class="btn btn-primary">Сохранить</button>
+      <button type="submit" class="btn btn-ghost">Сохранить</button>
       <a href="?action=products" class="btn btn-ghost">Отмена</a>
     </form>
     <?php

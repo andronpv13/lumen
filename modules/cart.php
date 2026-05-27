@@ -81,6 +81,6 @@ $pageTitle = 'Корзина';
       <input type="hidden" name="action" value="clear">
       <button class="btn btn-ghost" title=""> Очистить 🛒 </button>
     </form>
-    <a href="/?route=checkout" class="btn btn-primary">Оформить заказ →</a>
+    <a href="/?route=checkout" class="btn btn-ghost">Оформить заказ →</a>
   </div>
 <?php endif; ?>
