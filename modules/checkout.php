@@ -69,7 +69,6 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 }
 
 $pageTitle = 'Оформление заказа';
-require __DIR__ . '/../includes/header.php';
 ?>
 
 <h1>Оформление заказа</h1>
@@ -127,5 +126,3 @@ require __DIR__ . '/../includes/header.php';
     <div class="summary-row total"><span>Итого</span><strong><?php echo money($total+$delivery); ?></strong></div>
   </aside>
 </div>
-
-<?php require __DIR__ . '/../includes/footer.php'; ?>

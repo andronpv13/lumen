@@ -30,7 +30,6 @@ $products = $stmt->fetchAll();
 $categories = db()->query("SELECT * FROM categories ORDER BY name")->fetchAll();
 
 $pageTitle = 'Каталог свечей';
-require __DIR__ . '/../includes/header.php';
 ?>
 <div class="catalog-header">
     <h2 class="catalog-title">Каталог свечей</h2>
@@ -63,5 +62,3 @@ require __DIR__ . '/../includes/header.php';
     <?php endfor; ?>
 </nav>
 <?php endif; ?>
-
-<?php require __DIR__ . '/../includes/footer.php'; ?>

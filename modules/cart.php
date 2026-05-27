@@ -31,7 +31,6 @@ if ($action === 'clear') {
 $items = cart_items();
 $total = cart_total();
 $pageTitle = 'Корзина';
-require __DIR__ . '/../includes/header.php';
 ?>
 
 <h1>Корзина</h1>
@@ -85,5 +84,3 @@ require __DIR__ . '/../includes/header.php';
     <a href="/?route=checkout" class="btn btn-primary">Оформить заказ →</a>
   </div>
 <?php endif; ?>
-
-<?php require __DIR__ . '/../includes/footer.php'; ?>

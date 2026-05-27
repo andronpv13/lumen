@@ -35,7 +35,6 @@ $reviews->execute();
 $reviews = $reviews->fetchAll();
 
 $pageTitle = 'Главная страница';
-require __DIR__ . '/../includes/header.php';
 ?>
 
 <section class="hero">
@@ -74,5 +73,3 @@ require __DIR__ . '/../includes/header.php';
     <?php endforeach; ?>
   </div>
 </section>
-
-<?php require __DIR__ . '/../includes/footer.php'; ?>

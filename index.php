@@ -5,6 +5,8 @@
  * Все запросы проходят через этот файл.
  * Маршрут определяется через параметр $_GET['route']
  *
+ * Поддержка AJAX-запросов для SPA-навигации
+ *
  * Примеры URL:
  * /                    -> Главная страница (main)
  * /?route=shop         -> Каталог товаров
@@ -47,6 +49,13 @@ $routes = [
 
 // Проверяем существование маршрута
 if (!array_key_exists($route, $routes)) {
+    // Для AJAX-запросов возвращаем JSON
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) || isset($_GET['ajax'])) {
+        http_response_code(404);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['error' => 'Страница не найдена', 'code' => 404]);
+        exit;
+    }
     http_response_code(404);
     header('Content-Type: text/html; charset=utf-8');
     echo '<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>404 - Страница не найдена</title></head><body>';
@@ -60,6 +69,13 @@ if (!array_key_exists($route, $routes)) {
 // Проверяем существование файла модуля
 $moduleFile = $routes[$route];
 if (!file_exists($moduleFile)) {
+    // Для AJAX-запросов возвращаем JSON
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) || isset($_GET['ajax'])) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['error' => 'Модуль не найден', 'code' => 500]);
+        exit;
+    }
     http_response_code(500);
     header('Content-Type: text/html; charset=utf-8');
     echo '<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>500 - Ошибка сервера</title></head><body>';
@@ -70,5 +86,16 @@ if (!file_exists($moduleFile)) {
     exit;
 }
 
-// Подключаем модуль
-require $moduleFile;
+// Определяем тип запроса: AJAX или обычный
+$isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) || isset($_GET['ajax']);
+
+if ($isAjax) {
+    // AJAX-запрос: подключаем модуль и возвращаем только контент
+    header('Content-Type: text/html; charset=utf-8');
+    require $moduleFile;
+} else {
+    // Обычный запрос: подключаем header, затем модуль, затем footer
+    require __DIR__ . '/includes/header.php';
+    require $moduleFile;
+    require __DIR__ . '/includes/footer.php';
+}

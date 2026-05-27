@@ -91,7 +91,6 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 }
 
 $pageTitle = 'Вход / Регистрация';
-require __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="auth-wrap">
@@ -154,5 +153,3 @@ require __DIR__ . '/../includes/header.php';
     </form>
   <?php endif; ?>
 </div>
-
-<?php require __DIR__ . '/../includes/footer.php'; ?>

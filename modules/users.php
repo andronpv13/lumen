@@ -22,7 +22,6 @@ $pageTitle = match($activeTab) {
     default => 'Данные профиля'
 };
 
-require __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="admin-layout">
@@ -58,5 +57,3 @@ require __DIR__ . '/../includes/header.php';
     <?php endif; ?>
   </section>
 </div>
-
-<?php require __DIR__ . '/../includes/footer.php'; ?>

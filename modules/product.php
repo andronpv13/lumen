@@ -34,7 +34,6 @@ $reviews->execute([$id]);
 $reviews = $reviews->fetchAll();
 
 $pageTitle = $p['name'];
-require __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="product-detail">
@@ -91,5 +90,3 @@ require __DIR__ . '/../includes/header.php';
     <?php endforeach; endif; ?>
   </div>
 </section>
-
-<?php require __DIR__ . '/../includes/footer.php'; ?>

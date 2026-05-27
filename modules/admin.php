@@ -210,7 +210,6 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 
 // internal admin views for admin-only sidebar actions
 $pageTitle = 'Панель управления';
-require __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="admin-layout">
@@ -327,5 +326,3 @@ elseif ($action === 'settings' && !$isMod):
 <?php endif; ?>
   </section>
 </div>
-
-<?php require __DIR__ . '/../includes/footer.php'; ?>
