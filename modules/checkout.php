@@ -1,10 +1,10 @@
 <?php
-// checkout.php
-require_once __DIR__ . '/includes/functions.php';
+// modules/checkout.php - Оформление заказа
+require_once __DIR__ . '/../includes/functions.php';
 require_login();
 
 $items = cart_items();
-if (!$items) redirect('/cart.php');
+if (!$items) redirect('/?route=cart');
 
 $total = cart_total();
 $delivery = (float)setting('delivery_price', 0);
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
             db()->commit();
             $_SESSION['cart'] = [];
             flash("Заказ №$orderId оформлен! Спасибо за покупку.",'success');
-            redirect('/orders.php');
+            redirect('/?route=users&tab=orders');
         } catch (Exception $e) {
             db()->rollBack();
             flash('Ошибка оформления: '.$e->getMessage(),'error');
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 }
 
 $pageTitle = 'Оформление заказа';
-require __DIR__ . '/includes/header.php';
+require __DIR__ . '/../includes/header.php';
 ?>
 
 <h1>Оформление заказа</h1>
@@ -128,4 +128,4 @@ require __DIR__ . '/includes/header.php';
   </aside>
 </div>
 
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

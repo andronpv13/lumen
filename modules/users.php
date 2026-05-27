@@ -1,10 +1,11 @@
 <?php
-require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/includes/functions.php';
+// modules/users.php - Личный кабинет пользователя
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 // Проверка авторизации
 if (!isset($_SESSION['user'])) {
-    header('Location: auth.php');
+    header('Location: /?route=auth');
     exit;
 }
 
@@ -21,16 +22,16 @@ $pageTitle = match($activeTab) {
     default => 'Данные профиля'
 };
 
-require __DIR__ . '/includes/header.php';
+require __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="admin-layout">
   <aside class="admin-sidebar">
     <h3>Личный кабинет</h3>
     <nav>
-      <a href="?tab=profile" class="<?= $activeTab==='profile'?'active':'' ?>">👤 Профиль</a>
-      <a href="?tab=orders" class="<?= $activeTab==='orders'?'active':'' ?>">🧾 Заказы</a>
-      <a href="?tab=reviews" class="<?= $activeTab==='reviews'?'active':'' ?>">⭐ Отзывы</a>
+      <a href="/?route=users&tab=profile" class="<?= $activeTab==='profile'?'active':'' ?>">👤 Профиль</a>
+      <a href="/?route=users&tab=orders" class="<?= $activeTab==='orders'?'active':'' ?>">🧾 Заказы</a>
+      <a href="/?route=users&tab=reviews" class="<?= $activeTab==='reviews'?'active':'' ?>">⭐ Отзывы</a>
       <a href="/">🏠 На сайт</a>
     </nav>
   </aside>
@@ -42,20 +43,20 @@ require __DIR__ . '/includes/header.php';
     <?php if ($activeTab === 'profile'): ?>
         <?php
         $standalone = false;
-        include __DIR__ . '/users/profile.php';
+        include __DIR__ . '/../users/profile.php';
         ?>
     <?php elseif ($activeTab === 'orders'): ?>
         <?php
         $standalone = false;
-        include __DIR__ . '/users/orders.php';
+        include __DIR__ . '/../users/orders.php';
         ?>
     <?php elseif ($activeTab === 'reviews'): ?>
         <?php
         $standalone = false;
-        include __DIR__ . '/users/reviews.php';
+        include __DIR__ . '/../users/reviews.php';
         ?>
     <?php endif; ?>
   </section>
 </div>
 
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

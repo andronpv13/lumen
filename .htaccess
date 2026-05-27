@@ -1,7 +1,38 @@
-# .htaccess — защита папки от исполнения PHP
+# .htaccess — Защита папок и маршрутизация SPA
+
+# 1. Защита служебных папок от прямого доступа
 <IfModule mod_php.c>
     php_flag engine off
 </IfModule>
 <FilesMatch "\.(php|phtml|php5)$">
     Deny from all
 </FilesMatch>
+
+# 2. Маршрутизация SPA (Clean URLs)
+# Если файл или директория не существуют, перенаправляем на index.php
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Не переписываем существующие файлы и директории
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Все остальные запросы идут на index.php с параметром route
+    RewriteRule ^(.*)$ /?route=$1 [QSA,L]
+</IfModule>
+
+# 3. Защита от просмотра содержимого директорий
+Options -Indexes
+
+# 4. Кэширование статических файлов
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+</IfModule>

@@ -1,10 +1,10 @@
 <?php
-// shop.php
-require_once __DIR__ . '/includes/functions.php';
+// modules/shop.php - Каталог товаров
+require_once __DIR__ . '/../includes/functions.php';
 
 $cat = $_GET['cat'] ?? '';
 $page = max(1, (int)($_GET['page'] ?? 1));
-$perPage = (int)(require __DIR__ . '/config.php')['items_per_page'];
+$perPage = (int)(require __DIR__ . '/../config.php')['items_per_page'];
 
 $where = ['p.active=1'];
 $params = [];
@@ -30,12 +30,12 @@ $products = $stmt->fetchAll();
 $categories = db()->query("SELECT * FROM categories ORDER BY name")->fetchAll();
 
 $pageTitle = 'Каталог свечей';
-require __DIR__ . '/includes/header.php';
+require __DIR__ . '/../includes/header.php';
 ?>
 <div class="catalog-header">
     <h2 class="catalog-title">Каталог свечей</h2>
     <div class="filter-sidebar-inline">
-        <select id="category-filter" name="cat" onchange="document.location='?cat='+this.value;">
+        <select id="category-filter" name="cat" onchange="window.location.href='/?route=shop&cat='+this.value;">
             <option value="">Все товары</option>
             <?php foreach($categories as $c): ?>
                 <option value="<?= e($c['slug']) ?>" <?= $cat===$c['slug']?'selected':'' ?>><?= e($c['name']) ?></option>
@@ -49,7 +49,7 @@ require __DIR__ . '/includes/header.php';
         <?php if(!$products): ?>
             <p class="empty">Товары не найдены</p>
         <?php else: foreach($products as $p): ?>
-            <?php require __DIR__ . '/includes/partials/product-card.php'; ?>
+            <?php require __DIR__ . '/../includes/partials/product-card.php'; ?>
         <?php endforeach; endif; ?>
     </div>
 </div>
@@ -59,9 +59,9 @@ require __DIR__ . '/includes/header.php';
     <?php for($i=1; $i<=$pages; $i++):
         $qs = http_build_query(array_merge($_GET, ['page'=>$i]));
     ?>
-        <a href="?<?= $qs ?>" class="<?= $i===$page?'active':'' ?>"><?= $i ?></a>
+        <a href="/?route=shop&<?= $qs ?>" class="<?= $i===$page?'active':'' ?>"><?= $i ?></a>
     <?php endfor; ?>
 </nav>
 <?php endif; ?>
 
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

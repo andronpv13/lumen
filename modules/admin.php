@@ -1,18 +1,18 @@
 <?php
-// admin.php - Модернизированная панель управления с модульной архитектурой
-require_once __DIR__ . '/includes/functions.php';
+// modules/admin.php - Админ-панель
+require_once __DIR__ . '/../includes/functions.php';
 require_role(['admin','moderator']);
 $user = current_user();
 $isMod = $user['role'] === 'moderator';
 
 // Подключение модулей из папки admin/
-require_once __DIR__ . '/admin/dashboard.php';
-require_once __DIR__ . '/admin/products.php';
-require_once __DIR__ . '/admin/orders.php';
-require_once __DIR__ . '/admin/categories.php';
-require_once __DIR__ . '/admin/users.php';
-require_once __DIR__ . '/admin/reviews.php';
-require_once __DIR__ . '/admin/settings.php';
+require_once __DIR__ . '/../admin/dashboard.php';
+require_once __DIR__ . '/../admin/products.php';
+require_once __DIR__ . '/../admin/orders.php';
+require_once __DIR__ . '/../admin/categories.php';
+require_once __DIR__ . '/../admin/users.php';
+require_once __DIR__ . '/../admin/reviews.php';
+require_once __DIR__ . '/../admin/settings.php';
 
 $action = $_GET['action'] ?? 'dashboard';
 $viewId = isset($_GET['id']) ? $_GET['id'] : null;
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         if (!empty($_FILES['image']['tmp_name']) && $_FILES['image']['error']===0) {
             $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
             $fname = uniqid('p_') . '.' . $ext;
-            $cfg = require __DIR__ . '/config.php';
+            $cfg = require __DIR__ . '/../config.php';
             if (!is_dir($cfg['upload_dir'])) mkdir($cfg['upload_dir'], 0755, true);
             if (move_uploaded_file($_FILES['image']['tmp_name'], $cfg['upload_dir'].$fname)) $image = $fname;
         }
@@ -52,11 +52,11 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
             db()->prepare($sql)->execute(array_values($data));
         }
         flash('Товар сохранён','success');
-        redirect('?action=products');
+        redirect('/?route=admin&action=products');
     }
     if ($act === 'product_delete' && !$isMod) {
         db()->prepare("DELETE FROM products WHERE id=?")->execute([(int)$_POST['id']]);
-        flash('Удалено','success'); redirect('?action=products');
+        flash('Удалено','success'); redirect('/?route=admin&action=products');
     }
 
     // Категории (только админ)
@@ -66,11 +66,11 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         $slug = trim($_POST['slug']);
         if ($id) db()->prepare("UPDATE categories SET name=?, slug=? WHERE id=?")->execute([$name,$slug,$id]);
         else db()->prepare("INSERT INTO categories (name,slug) VALUES (?,?)")->execute([$name,$slug]);
-        flash('Категория сохранена','success'); redirect('?action=categories');
+        flash('Категория сохранена','success'); redirect('/?route=admin&action=categories');
     }
     if ($act === 'category_delete' && !$isMod) {
         db()->prepare("DELETE FROM categories WHERE id=?")->execute([(int)$_POST['id']]);
-        flash('Удалено','success'); redirect('?action=categories');
+        flash('Удалено','success'); redirect('/?route=admin&action=categories');
     }
 
     // Заказы
@@ -81,11 +81,11 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         $paymentStatus = in_array($_POST['payment_status'] ?? '', $validPaymentStatuses, true) ? $_POST['payment_status'] : 'pending';
         OrderRepository::updateStatus((int)$_POST['id'], $status);
         OrderRepository::updatePaymentStatus((int)$_POST['id'], $paymentStatus);
-        flash('Заказ обновлён','success'); redirect('?action=orders');
+        flash('Заказ обновлён','success'); redirect('/?route=admin&action=orders');
     }
     if ($act === 'order_delete' && !$isMod) {
         db()->prepare("DELETE FROM orders WHERE id=?")->execute([(int)$_POST['id']]);
-        flash('Удалено','success'); redirect('?action=orders');
+        flash('Удалено','success'); redirect('/?route=admin&action=orders');
     }
 
     // Пользователи (только админ)
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
             db()->prepare("INSERT INTO users (name,email,role,phone,password) VALUES (?,?,?,?,?)")
                 ->execute([$data['name'], $data['email'], $data['role'], $data['phone'], hash_password($_POST['password'] ?? '123456')]);
         }
-        flash('Сохранено','success'); redirect('?action=users');
+        flash('Сохранено','success'); redirect('/?route=admin&action=users');
     }
     if ($act === 'save_profile') {
         $name = trim($_POST['name'] ?? '');
@@ -116,17 +116,17 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
           // basic validation: name (login) and email
           if ($name === '' || $email === '') {
             flash('Логин и email обязательны','error');
-            redirect('?action=account');
+            redirect('/?route=admin&action=account');
           }
           // login (name) cannot contain spaces or tabs
           if (preg_match('/[\s\t]/', $name)) {
             flash('Логин не может содержать пробелы или табы','error');
-            redirect('?action=account');
+            redirect('/?route=admin&action=account');
           }
           // email format
           if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             flash('Неверный формат email','error');
-            redirect('?action=account');
+            redirect('/?route=admin&action=account');
           }
 
           // If user wants to change password - validate current and new
@@ -134,20 +134,20 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
             // new password restrictions
             if (strlen($password) < 6) {
               flash('Новый пароль должен быть не менее 6 символов','error');
-              redirect('?action=account');
+              redirect('/?route=admin&action=account');
             }
             if (preg_match('/[\s\t]/', $password)) {
               flash('Новый пароль не может содержать пробелы или табы','error');
-              redirect('?action=account');
+              redirect('/?route=admin&action=account');
             }
             // current password required
             if ($current === '') {
               flash('Для смены пароля введите текущий пароль','error');
-              redirect('?action=account');
+              redirect('/?route=admin&action=account');
             }
             if (preg_match('/[\s\t]/', $current)) {
               flash('Текущий пароль не может содержать пробелы или табы','error');
-              redirect('?action=account');
+              redirect('/?route=admin&action=account');
             }
             // verify current password from DB
             $stmt = db()->prepare('SELECT password FROM users WHERE id = ?');
@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
             $hash = $row['password'] ?? '';
             if (!verify_password($current, $hash)) {
               flash('Текущий пароль неверный','error');
-              redirect('?action=account');
+              redirect('/?route=admin&action=account');
             }
           }
 
@@ -179,24 +179,24 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
             'address' => $address,
           ];
           flash('Профиль сохранён','success');
-          redirect('?action=account');
+          redirect('/?route=admin&action=account');
     }
     if ($act === 'user_delete' && !$isMod) {
         if ((int)$_POST['id'] !== $user['id']) {
             db()->prepare("DELETE FROM users WHERE id=?")->execute([(int)$_POST['id']]);
             flash('Удалено','success');
         }
-        redirect('?action=users');
+        redirect('/?route=admin&action=users');
     }
 
     // Отзывы
     if ($act === 'review_approve') {
         db()->prepare("UPDATE reviews SET approved=1 WHERE id=?")->execute([(int)$_POST['id']]);
-        flash('Одобрено','success'); redirect('?action=reviews');
+        flash('Одобрено','success'); redirect('/?route=admin&action=reviews');
     }
     if ($act === 'review_delete') {
         db()->prepare("DELETE FROM reviews WHERE id=?")->execute([(int)$_POST['id']]);
-        flash('Удалено','success'); redirect('?action=reviews');
+        flash('Удалено','success'); redirect('/?route=admin&action=reviews');
     }
 
     // Настройки (только админ)
@@ -204,29 +204,29 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         $keys = ['shop_name','shop_phone','shop_email','shop_address','currency','delivery_price'];
         $stmt = db()->prepare("INSERT INTO settings (`key`,value) VALUES (?,?) ON DUPLICATE KEY UPDATE value=VALUES(value)");
         foreach ($keys as $k) $stmt->execute([$k, $_POST[$k] ?? '']);
-        flash('Настройки сохранены','success'); redirect('?action=settings');
+        flash('Настройки сохранены','success'); redirect('/?route=admin&action=settings');
     }
 }
 
 // internal admin views for admin-only sidebar actions
 $pageTitle = 'Панель управления';
-require __DIR__ . '/includes/header.php';
+require __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="admin-layout">
   <aside class="admin-sidebar">
     <h3>Панель: <?= $isMod?'Модератор':'Админ' ?></h3>
     <nav>
-      <a href="?action=dashboard" class="<?= $action==='dashboard'?'active':'' ?>">📊 Дашборд</a>
-      <a href="?action=account" class="<?= $action==='account'?'active':'' ?>">👤 Мои данные</a>
-        <a href="?action=my_orders" class="<?= $action==='my_orders'?'active':'' ?>">🧾 Мои заказы</a>
-      <a href="?action=products" class="<?= $action==='products'?'active':'' ?>">🕯️ Товары</a>
-      <?php if(!$isMod): ?><a href="?action=categories" class="<?= $action==='categories'?'active':'' ?>">📂 Категории</a><?php endif; ?>
-      <a href="?action=orders" class="<?= $action==='orders'?'active':'' ?>">🛍️ Заказы</a>
-      <a href="?action=reviews" class="<?= $action==='reviews'?'active':'' ?>">⭐ Отзывы</a>
+      <a href="/?route=admin&action=dashboard" class="<?= $action==='dashboard'?'active':'' ?>">📊 Дашборд</a>
+      <a href="/?route=admin&action=account" class="<?= $action==='account'?'active':'' ?>">👤 Мои данные</a>
+        <a href="/?route=admin&action=my_orders" class="<?= $action==='my_orders'?'active':'' ?>">🧾 Мои заказы</a>
+      <a href="/?route=admin&action=products" class="<?= $action==='products'?'active':'' ?>">🕯️ Товары</a>
+      <?php if(!$isMod): ?><a href="/?route=admin&action=categories" class="<?= $action==='categories'?'active':'' ?>">📂 Категории</a><?php endif; ?>
+      <a href="/?route=admin&action=orders" class="<?= $action==='orders'?'active':'' ?>">🛍️ Заказы</a>
+      <a href="/?route=admin&action=reviews" class="<?= $action==='reviews'?'active':'' ?>">⭐ Отзывы</a>
       <?php if(!$isMod): ?>
-        <a href="?action=users" class="<?= $action==='users'?'active':'' ?>">👥 Пользователи</a>
-        <a href="?action=settings" class="<?= $action==='settings'?'active':'' ?>">⚙️ Настройки</a>
+        <a href="/?route=admin&action=users" class="<?= $action==='users'?'active':'' ?>">👥 Пользователи</a>
+        <a href="/?route=admin&action=settings" class="<?= $action==='settings'?'active':'' ?>">⚙️ Настройки</a>
       <?php endif; ?>
       <a href="/">🏠 На сайт</a>
     </nav>
@@ -292,7 +292,7 @@ elseif ($action === 'my_orders'):
             <td><?= $o['payment_status'] === 'paid' ? 'Оплачен' : 'Ожидает' ?></td>
             <td>
               <?php if (($user['role'] ?? '') === 'admin'): ?>
-                <a href="?action=orders&id=<?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a>
+                <a href="/?route=admin&action=orders&id=<?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a>
                 <form method="post" style="display:inline" onsubmit="return confirm('Удалить?')">
                   <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
                   <input type="hidden" name="action" value="order_delete">
@@ -300,7 +300,7 @@ elseif ($action === 'my_orders'):
                   <button class="btn btn-sm btn-ghost">🗑️</button>
                 </form>
               <?php else: ?>
-                <a href="/orders.php?id=<?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a>
+                <a href="/?route=users&tab=orders&id=<?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a>
               <?php endif; ?>
             </td>
           </tr>
@@ -328,4 +328,4 @@ elseif ($action === 'settings' && !$isMod):
   </section>
 </div>
 
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

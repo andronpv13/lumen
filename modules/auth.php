@@ -1,6 +1,6 @@
 <?php
-// auth.php
-require_once __DIR__ . '/includes/functions.php';
+// modules/auth.php - Вход / Регистрация
+require_once __DIR__ . '/../includes/functions.php';
 
 $tab = $_GET['tab'] ?? 'login';
 
@@ -91,13 +91,13 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 }
 
 $pageTitle = 'Вход / Регистрация';
-require __DIR__ . '/includes/header.php';
+require __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="auth-wrap">
   <div class="tabs">
-    <a href="?tab=login" class="<?= $tab==='login'?'active':'' ?>">Вход</a>
-    <a href="?tab=register" class="<?= $tab==='register'?'active':'' ?>">Регистрация</a>
+    <a href="/?route=auth&tab=login" class="<?= $tab==='login'?'active':'' ?>">Вход</a>
+    <a href="/?route=auth&tab=register" class="<?= $tab==='register'?'active':'' ?>">Регистрация</a>
   </div>
 
   <?php if($tab==='login'): ?>
@@ -155,4 +155,4 @@ require __DIR__ . '/includes/header.php';
   <?php endif; ?>
 </div>
 
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

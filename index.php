@@ -1,78 +1,74 @@
 <?php
-// index.php
-require_once __DIR__ . '/includes/functions.php';
+/**
+ * index.php - Единая точка входа (SPA Router)
+ *
+ * Все запросы проходят через этот файл.
+ * Маршрут определяется через параметр $_GET['route']
+ *
+ * Примеры URL:
+ * /                    -> Главная страница (main)
+ * /?route=shop         -> Каталог товаров
+ * /?route=product&id=5 -> Страница товара
+ * /?route=cart         -> Корзина
+ * /?route=checkout     -> Оформление заказа
+ * /?route=auth         -> Вход/регистрация
+ * /?route=users        -> Личный кабинет
+ * /?route=admin        -> Админ-панель
+ */
 
-// Получаем 4 последних добавленных товара
-$stmt = db()->prepare("
-    SELECT p.*, c.name AS category_name
-    FROM products p
-    LEFT JOIN categories c ON p.category_id=c.id
-    WHERE p.active=1
-    ORDER BY p.created_at DESC
-    LIMIT 4
-");
-$stmt->execute();
-$new_products = $stmt->fetchAll();
+// Начинаем сессию (если ещё не начата)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-// Получаем 4 последних отзыва
-$reviews = db()->prepare("
-    SELECT
-        r.id,
-        r.comment AS text,
-        r.rating,
-        r.created_at,
-        u.name AS author_name,
-        p.name AS product_name,
-        p.id AS product_id
-    FROM reviews r
-    LEFT JOIN users u ON r.user_id=u.id
-    LEFT JOIN products p ON r.product_id=p.id
-    WHERE r.approved = 1  -- показываем только одобренные отзывы
-    ORDER BY r.created_at DESC
-    LIMIT 4
-");
-$reviews->execute();
-$reviews = $reviews->fetchAll();
+// Получаем маршрут из query параметра
+$route = $_GET['route'] ?? '';
 
-$pageTitle = 'Главная страница';
-require __DIR__ . '/includes/header.php';
-?>
+// Очищаем маршрут от лишних символов для безопасности
+$route = preg_replace('/[^a-zA-Z0-9_-]/', '', $route);
 
-<section class="hero">
-  <h1>Свечи, которые согревают душу</h1>
-  <p>Натуральный пчелиный воск. Ароматы, вдохновлённые природой.</p>
-</section>
+// Пустой маршрут = главная страница
+if ($route === '') {
+    $route = 'main';
+}
 
-<section class="new-products">
-  <h2 align="center">Наши новинки</h2><br>
-  <div class="product-grid home-grid">
-    <?php foreach($new_products as $p): ?>
-      <?php require __DIR__ . '/includes/partials/product-card.php'; ?>
-    <?php endforeach; ?>
-  </div>
-</section>
+// Карта маршрутов: маршрут => файл модуля
+$routes = [
+    'main'       => __DIR__ . '/modules/main.php',
+    'shop'       => __DIR__ . '/modules/shop.php',
+    'product'    => __DIR__ . '/modules/product.php',
+    'cart'       => __DIR__ . '/modules/cart.php',
+    'checkout'   => __DIR__ . '/modules/checkout.php',
+    'auth'       => __DIR__ . '/modules/auth.php',
+    'users'      => __DIR__ . '/modules/users.php',
+    'admin'      => __DIR__ . '/modules/admin.php',
+    'moderator'  => __DIR__ . '/modules/moderator.php',
+];
 
-<section class="reviews home-reviews">
-  <h2 align="center">Отзывы покупателей</h2>
-  <div class="reviews-grid">
-    <?php foreach($reviews as $review): ?>
-      <div class="review-card">
-        <div class="review-card__info">
-          <h3><a href="product.php?id=<?= $review['product_id'] ?>"><?= e($review['product_name']) ?></a></h3>
-          <div class="rating-stars">
-            <?php for ($i = 1; $i <= $review['rating']; $i++): ?>
-              <span class="star star-filled">★</span>
-            <?php endfor; ?>
-          </div>
-        </div>
-        <p class="review-text"><?= e($review['text']) ?></p>
-        <div class="review-footer">
-          <span class="author"><?= e($review['author_name']) ?></span>
-          <time class="muted small"><?= date('d.m.Y', strtotime($review['created_at'])) ?></time>
-        </div>
-      </div>
-    <?php endforeach; ?>
-  </div>
-</section>
+// Проверяем существование маршрута
+if (!array_key_exists($route, $routes)) {
+    http_response_code(404);
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>404 - Страница не найдена</title></head><body>';
+    echo '<h1>404 - Страница не найдена</h1>';
+    echo '<p>Запрашиваемая страница не существует.</p>';
+    echo '<a href="/">Вернуться на главную</a>';
+    echo '</body></html>';
+    exit;
+}
 
-<?php require __DIR__ . '/includes/footer.php'; ?>
+// Проверяем существование файла модуля
+$moduleFile = $routes[$route];
+if (!file_exists($moduleFile)) {
+    http_response_code(500);
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>500 - Ошибка сервера</title></head><body>';
+    echo '<h1>500 - Ошибка сервера</h1>';
+    echo '<p>Модуль страницы не найден.</p>';
+    echo '<a href="/">Вернуться на главную</a>';
+    echo '</body></html>';
+    exit;
+}
+
+// Подключаем модуль
+require $moduleFile;

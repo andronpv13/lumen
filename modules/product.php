@@ -1,6 +1,7 @@
 <?php
-// product.php
-require_once __DIR__ . '/includes/functions.php';
+// modules/product.php - Страница товара
+require_once __DIR__ . '/../includes/functions.php';
+
 $id = (int)($_GET['id'] ?? 0);
 $stmt = db()->prepare("SELECT p.*, c.name AS category_name FROM products p LEFT JOIN categories c ON p.category_id=c.id WHERE p.id=? AND p.active=1");
 $stmt->execute([$id]);
@@ -20,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action'] ?? '')==='review') 
         $stmt->execute([$id, current_user()['id'], $rating, $comment]);
         flash('Спасибо! Ваш отзыв появится после модерации','success');
     }
-    redirect("/product.php?id=$id");
+    redirect("/?route=product&id=$id");
 }
 
 // Статистика отзывов
@@ -33,7 +34,7 @@ $reviews->execute([$id]);
 $reviews = $reviews->fetchAll();
 
 $pageTitle = $p['name'];
-require __DIR__ . '/includes/header.php';
+require __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="product-detail">
@@ -59,7 +60,7 @@ require __DIR__ . '/includes/header.php';
       <div><strong>В наличии:</strong> <?= $p['stock'] ?> шт.</div>
     </div>
     <?php if($p['stock']>0): ?>
-      <form method="post" action="/cart.php" class="add-to-cart-form">
+      <form method="post" action="/?route=cart" class="add-to-cart-form">
         <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
         <input type="hidden" name="action" value="add">
         <input type="hidden" name="id" value="<?= $p['id'] ?>">
@@ -91,4 +92,4 @@ require __DIR__ . '/includes/header.php';
   </div>
 </section>
 
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

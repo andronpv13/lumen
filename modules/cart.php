@@ -1,6 +1,6 @@
 <?php
-// cart.php
-require_once __DIR__ . '/includes/functions.php';
+// modules/cart.php - Корзина
+require_once __DIR__ . '/../includes/functions.php';
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 if ($_SERVER['REQUEST_METHOD']==='POST') csrf_check();
@@ -10,34 +10,34 @@ if ($action === 'add') {
     $qty = max(1, (int)($_POST['qty'] ?? 1));
     $_SESSION['cart'][$id] = ($_SESSION['cart'][$id] ?? 0) + $qty;
     flash('Товар добавлен в корзину','success');
-    redirect($_SERVER['HTTP_REFERER'] ?? '/cart.php');
+    redirect($_SERVER['HTTP_REFERER'] ?? '/?route=cart');
 }
 if ($action === 'update') {
     $id = (int)$_POST['id'];
     $qty = (int)$_POST['qty'];
     if ($qty <= 0) unset($_SESSION['cart'][$id]);
     else $_SESSION['cart'][$id] = $qty;
-    redirect('/cart.php');
+    redirect('/?route=cart');
 }
 if ($action === 'remove') {
     unset($_SESSION['cart'][(int)$_POST['id']]);
-    redirect('/cart.php');
+    redirect('/?route=cart');
 }
 if ($action === 'clear') {
     $_SESSION['cart'] = [];
-    redirect('/cart.php');
+    redirect('/?route=cart');
 }
 
 $items = cart_items();
 $total = cart_total();
 $pageTitle = 'Корзина';
-require __DIR__ . '/includes/header.php';
+require __DIR__ . '/../includes/header.php';
 ?>
 
 <h1>Корзина</h1>
 
 <?php if(!$items): ?>
-  <p class="empty">Корзина пуста. <a href="/shop.php" class="btn btn-sm btn-ghost" style="margin-bottom:1rem;">Вернуться в каталог</a></p>
+  <p class="empty">Корзина пуста. <a href="/?route=shop" class="btn btn-sm btn-ghost" style="margin-bottom:1rem;">Вернуться в каталог</a></p>
 <?php else: ?>
   <table class="cart-table">
     <thead><tr><th>Товар</th><th>Цена</th><th>Кол-во</th><th>Сумма</th><th></th></tr></thead>
@@ -45,7 +45,7 @@ require __DIR__ . '/includes/header.php';
     <?php foreach($items as $it): ?>
       <tr>
         <td>
-          <a href="/product.php?id=<?= $it['id'] ?>" class="cart-item">
+          <a href="/?route=product&id=<?= $it['id'] ?>" class="cart-item">
             <img src="<?= product_image($it['image']) ?>" alt="">
             <span><?= e($it['name']) ?></span>
           </a>
@@ -82,8 +82,8 @@ require __DIR__ . '/includes/header.php';
       <input type="hidden" name="action" value="clear">
       <button class="btn btn-ghost" title=""> Очистить 🛒 </button>
     </form>
-    <a href="/checkout.php" class="btn btn-primary">Оформить заказ →</a>
+    <a href="/?route=checkout" class="btn btn-primary">Оформить заказ →</a>
   </div>
 <?php endif; ?>
 
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php require __DIR__ . '/../includes/footer.php'; ?>
