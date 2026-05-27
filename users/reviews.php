@@ -141,7 +141,7 @@ if (empty($errors) || !isset($_POST['save_review'])) {
                     <?php endif; ?>
                     <div class="product-info">
                         <h3><?php echo htmlspecialchars($item['name']); ?></h3>
-                        <button class="btn btn-primary btn-sm" onclick="toggleReviewForm(<?php echo $item['id']; ?>)">Оставить отзыв</button>
+                        <button class="btn btn-ghost btn-sm" onclick="toggleReviewForm(<?php echo $item['id']; ?>)">Оставить отзыв</button>
 
                         <div id="review-form-<?php echo $item['id']; ?>" class="review-form" style="display:none;">
                             <form method="post">
@@ -161,7 +161,7 @@ if (empty($errors) || !isset($_POST['save_review'])) {
                                 <label for="comment_<?php echo $item['id']; ?>">Комментарий:</label>
                                 <textarea name="comment" id="comment_<?php echo $item['id']; ?>" placeholder="Ваш отзыв о товаре..."></textarea><br>
 
-                                <button type="submit" name="save_review" class="btn btn-primary">Отправить отзыв</button>
+                                <button type="submit" name="save_review" class="btn btn-ghost">Отправить отзыв</button>
                             </form>
                         </div>
                     </div>

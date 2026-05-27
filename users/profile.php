@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_profile') {
       <label>Текущий пароль <input type="password" name="current_password" placeholder="Оставьте пустым, если не меняете пароль"></label>
       <label>Новый пароль <input type="password" name="password" placeholder="Оставьте пустым, чтобы не менять"></label>
     </div>
-    <button class="btn btn-primary">Сохранить профиль</button>
+    <button class="btn btn-ghost">Сохранить профиль</button>
   </form>
 
   <h3 style="margin-top: 2rem;">Данные для доставки</h3>
@@ -147,6 +147,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_profile') {
       <label>Дом * <input type="text" name="building" value="<?= e($deliveryProfile['building'] ?? '') ?>" required></label>
       <label>Квартира <input type="text" name="apartment" value="<?= e($deliveryProfile['apartment'] ?? '') ?>"></label>
     </div>
-    <button class="btn btn-primary" style="margin-top: 1rem;">Сохранить адрес доставки</button>
+    <button class="btn btn-ghost" style="margin-top: 1rem;">Сохранить адрес доставки</button>
   </form>
 </section>
