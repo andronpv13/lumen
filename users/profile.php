@@ -11,7 +11,7 @@ if (!isset($standalone) || $standalone !== false) {
     require_once __DIR__ . '/../includes/functions.php';
     require_login();
 
-    header('Location: /users.php?tab=profile');
+    header('Location: /?route=users&tab=profile');
     exit;
 }
 

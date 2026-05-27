@@ -21,7 +21,7 @@ if (!isset($standalone) || $standalone !== false) {
     }
 
     $queryString = http_build_query(array_merge(['tab' => 'orders'], $queryParams));
-    header('Location: /users.php?' . $queryString);
+    header('Location: /?route=users&' . $queryString);
     exit;
 }
 

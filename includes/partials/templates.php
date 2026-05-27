@@ -43,7 +43,7 @@ function render_orders_table($orders, $statusLabels, $showActions = true, $isAdm
             <?php if ($isAdmin): ?>
               <a href="?action=orders&id=<?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a>
             <?php else: ?>
-              <a href="/users/orders.php?id=<?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a>
+              <a href="/?route=users&action=orders&id=<?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a>
             <?php endif; ?>
           </td>
           <?php endif; ?>
@@ -62,11 +62,11 @@ function render_product_card($product) {
     $img = product_image($product['image'] ?? '');
     ?>
     <div class="product-card">
-      <a href="/product.php?id=<?= $product['id'] ?>">
+      <a href="/?route=product&id=<?= $product['id'] ?>">
         <img src="<?= $img ?>" alt="<?= e($product['name']) ?>" loading="lazy">
       </a>
       <div class="product-info">
-        <h3><a href="/product.php?id=<?= $product['id'] ?>"><?= e($product['name']) ?></a></h3>
+        <h3><a href="/?route=product&id=<?= $product['id'] ?>"><?= e($product['name']) ?></a></h3>
         <?php if (!empty($product['category_name'])): ?>
           <p class="category"><?= e($product['category_name']) ?></p>
         <?php endif; ?>
@@ -74,7 +74,7 @@ function render_product_card($product) {
         <?php if (!empty($product['aroma'])): ?>
           <p class="aroma">Аромат: <?= e($product['aroma']) ?></p>
         <?php endif; ?>
-        <form method="post" action="/cart.php">
+        <form method="post" action="/?route=cart">
           <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
           <input type="hidden" name="id" value="<?= $product['id'] ?>">
           <input type="hidden" name="action" value="add">
@@ -93,7 +93,7 @@ function render_product_card($product) {
  * @param string $action URL действия формы
  * @param bool $showRole Показывать поле роли (только для админа)
  */
-function render_profile_form($user, $action = '/users/profile.php', $showRole = false) {
+function render_profile_form($user, $action = '/?route=users&action=profile', $showRole = false) {
     ?>
     <form method="post" class="admin-form" action="<?= $action ?>">
       <input type="hidden" name="csrf" value="<?= csrf_token() ?>">

@@ -11,7 +11,7 @@ if (!isset($standalone) || $standalone !== false) {
     require_once __DIR__ . '/../includes/functions.php';
     require_login();
 
-    header('Location: /users.php?tab=reviews');
+    header('Location: /?route=users&tab=reviews');
     exit;
 }
 
@@ -177,7 +177,7 @@ if (empty($errors) || !isset($_POST['save_review'])) {
         <?php foreach ($userReviews as $review): ?>
             <div class="review-card">
                 <div class="review-card__info">
-                    <h3><a href="product.php?id=<?= $review['product_id'] ?>"><?= e($review['product_name']) ?></a></h3>
+                    <h3><a href="/?route=product&id=<?= $review['product_id'] ?>"><?= e($review['product_name']) ?></a></h3>
                     <div class="rating-stars">
                         <?php for ($i = 1; $i <= $review['rating']; $i++): ?>
                             <span class="star star-filled">★</span>
