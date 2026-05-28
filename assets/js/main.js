@@ -465,6 +465,26 @@ document.addEventListener('DOMContentLoaded', function() {
       forceInvalid = forceInvalid || false;
       const wrap = input.closest('.field-input-wrap');
       const invalid = !valid && forceInvalid;
+
+      // Если поле пустое - убираем всю подсветку
+      if (!input.value.trim()) {
+        if (wrap) {
+          wrap.classList.remove('input-valid', 'input-invalid');
+        }
+        input.classList.remove('input-valid', 'input-invalid');
+        const field = input.dataset.field;
+        let hint;
+        if (field === 'current_password') {
+          hint = hints.current;
+        } else if (field === 'password') {
+          hint = hints.password;
+        }
+        if (hint) {
+          hint.textContent = '';
+        }
+        return;
+      }
+
       if (wrap) {
         wrap.classList.toggle('input-valid', valid);
         wrap.classList.toggle('input-invalid', invalid);
@@ -552,22 +572,29 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!value || !validateNoSpaces(input.value)) {
         // Если поле пустое или содержит пробелы - не делаем AJAX запрос
         if (!value) {
-          validationState.current.checked = true;
+          validationState.current.checked = false;
           validationState.current.valid = true;
+        } else {
+          // Поле содержит пробелы - подсвечиваем красным
+          setState(input, false, 'Пробелы запрещены', true);
+          validationState.current.checked = true;
+          validationState.current.valid = false;
         }
         updateSubmitState();
         return;
       }
 
-      fetch('?check_password=' + encodeURIComponent(value), { credentials: 'same-origin' })
+      fetch('/?route=users&tab=profile&check_password=' + encodeURIComponent(value), { credentials: 'same-origin' })
         .then(res => res.json())
         .then(data => {
           if (!data.ok) {
             // Ошибка проверки - неверный пароль
             setState(input, false, data.message || 'Неверный текущий пароль', true);
+            validationState.current.valid = false;
           } else {
             // Пароль подтверждён
             setState(input, true, data.message || 'Пароль подтверждён');
+            validationState.current.valid = true;
           }
           updateSubmitState();
         })
@@ -629,12 +656,13 @@ document.addEventListener('DOMContentLoaded', function() {
         checkCurrentPassword(currentPasswordInput);
       } else if (!currentPasswordInput.value.trim()) {
         // Поле пустое - сбрасываем состояние
-        validationState.current.checked = true;
+        validationState.current.checked = false;
         validationState.current.valid = true;
-        setState(currentPasswordInput, true, '');
         updateSubmitState();
       } else {
+        // Поле содержит пробелы - подсвечиваем красным
         validationState.current.checked = true;
+        validationState.current.valid = false;
         updateSubmitState();
       }
     }));
@@ -642,10 +670,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Проверка нового пароля при вводе
     passwordInput.addEventListener('input', () => {
       const result = checkField(passwordInput, true);
-      if (!result.valid) {
-        validationState.password.checked = true;
-      } else {
-        validationState.password.checked = true;
+      // Проверяем, что новый пароль отличается от текущего
+      const passwordValue = passwordInput.value.trim();
+      const currentValue = currentPasswordInput.value.trim();
+
+      if (result.valid && passwordValue) {
+        // Если новый пароль совпадает с текущим - это ошибка
+        if (currentValue && passwordValue === currentValue) {
+          setState(passwordInput, false, 'Новый пароль должен отличаться от текущего', true);
+          validationState.password.valid = false;
+        } else if (passwordValue.length >= 6) {
+          // Новый пароль не менее 6 символов и отличается от текущего (или текущий ещё не введён)
+          validationState.password.valid = true;
+        }
       }
       updateSubmitState();
     });
@@ -655,6 +692,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const value = currentPasswordInput.value.trim();
       if (value && validateNoSpaces(currentPasswordInput.value)) {
         checkCurrentPassword(currentPasswordInput);
+      } else if (!validateNoSpaces(currentPasswordInput.value) && currentPasswordInput.value) {
+        // Поле содержит пробелы - подсвечиваем красным
+        setState(currentPasswordInput, false, 'Пробелы запрещены', true);
+        validationState.current.checked = true;
+        validationState.current.valid = false;
+        updateSubmitState();
       }
     });
 

@@ -38,6 +38,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['check_password'])) {
     header('Content-Type: application/json');
     $currentPassword = $_GET['check_password'] ?? '';
 
+    // Проверка на наличие пробелов
+    if (preg_match('/\s/', $currentPassword)) {
+        echo json_encode(['ok' => false, 'valid' => false, 'message' => 'Пробелы запрещены']);
+        exit;
+    }
+
     if ($currentPassword === '') {
         echo json_encode(['ok' => false, 'valid' => false, 'message' => 'Введите текущий пароль']);
         exit;

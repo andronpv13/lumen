@@ -176,13 +176,13 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .auth-form input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);margin-top:4px}
 .auth-form .btn{width:100%;margin-top:10px}
 .field-label{font-weight:600;color:var(--text)}
-.field-input-wrap{position:relative}
-.field-input-wrap input{width:100%;padding-right:40px}
+.field-input-wrap{position:relative;border-radius:var(--radius);overflow:hidden}
+.field-input-wrap input{width:100%;padding-right:40px;border-radius:var(--radius)}
 .field-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);border:none;background:none;padding:0;font-size:1.1rem;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center}
 .field-toggle svg{width:20px;height:20px;display:block}
 .field-hint{margin-top:6px;font-size:.85rem;color:var(--muted);min-height:18px}
-.input-valid{border-color:#12e40b;background:#12e40ba9}
-.input-invalid{border-color:#ee3f0a;background:#ee3f0ab9}
+.input-valid,.field-input-wrap.input-valid input{border-color:#12e40b!important;background:#12e40ba9!important}
+.input-invalid,.field-input-wrap.input-invalid input{border-color:#ee3f0a!important;background:#ee3f0ab9!important}
 .field-input-wrap.input-invalid + .field-hint{color:#b33a3a}
 .field-input-wrap.input-valid + .field-hint{color:#2d7a4f}
 
