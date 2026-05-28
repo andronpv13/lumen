@@ -181,8 +181,8 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .field-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);border:none;background:none;padding:0;font-size:1.1rem;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center}
 .field-toggle svg{width:20px;height:20px;display:block}
 .field-hint{margin-top:6px;font-size:.85rem;color:var(--muted);min-height:18px}
-.input-valid,.field-input-wrap.input-valid input{border-color:#12e40b!important;background:transparent!important}
-.input-invalid,.field-input-wrap.input-invalid input{border-color:#ee3f0a!important;background:transparent!important}
+.input-valid,.field-input-wrap.input-valid input{border-color:#12e40b!important;background:rgba(18,228,11,0.08)!important}
+.input-invalid,.field-input-wrap.input-invalid input,.field-input-wrap.input-invalid input:focus,.input-invalid:focus{border-color:#ee3f0a!important;background:rgba(238,63,10,0.08)!important}
 .field-label.input-valid .field-hint{color:#12e40b}
 .field-label.input-invalid .field-hint{color:#ee3f0a}
 

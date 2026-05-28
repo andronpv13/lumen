@@ -1,20 +1,23 @@
 <?php
 // modules/users.php - Личный кабинет пользователя
-require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../includes/functions.php';
 
-// Проверка авторизации
-if (!isset($_SESSION['user'])) {
-    header('Location: /?route=auth');
-    exit;
-}
+// AJAX-проверка текущего пароля (должна быть ДО подключения config.php и любых других операций)
+if (isset($_GET['check_password']) || isset($_POST['check_password'])) {
+    // Начинаем сессию для доступа к данным пользователя
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
 
-$user = current_user();
-
-// AJAX-проверка текущего пароля (должна быть до любого вывода и до загрузки вкладок)
-if (isset($_GET['check_password'])) {
     header('Content-Type: application/json');
-    $currentPassword = $_GET['check_password'] ?? '';
+
+    // Проверка авторизации
+    if (!isset($_SESSION['user'])) {
+        echo json_encode(['ok' => false, 'valid' => false, 'message' => 'Пользователь не авторизован']);
+        exit;
+    }
+
+    $user = $_SESSION['user'];
+    $currentPassword = $_GET['check_password'] ?? $_POST['check_password'] ?? '';
 
     // Проверка на наличие пробелов
     if (preg_match('/\s/', $currentPassword)) {
@@ -28,17 +31,33 @@ if (isset($_GET['check_password'])) {
     }
 
     // Получаем актуальный хеш пароля из БД (в сессии пароль не хранится)
-    $stmt = db()->prepare("SELECT password FROM users WHERE id=?");
-    $stmt->execute([$user['id']]);
-    $dbUser = $stmt->fetch();
+    try {
+        require_once __DIR__ . '/../includes/db.php';
+        $stmt = db()->prepare("SELECT password FROM users WHERE id=?");
+        $stmt->execute([$user['id']]);
+        $dbUser = $stmt->fetch();
 
-    if ($dbUser && password_verify($currentPassword, $dbUser['password'])) {
-        echo json_encode(['ok' => true, 'valid' => true, 'message' => 'Пароль подтверждён']);
-    } else {
-        echo json_encode(['ok' => false, 'valid' => false, 'message' => 'Неверный текущий пароль']);
+        if ($dbUser && password_verify($currentPassword, $dbUser['password'])) {
+            echo json_encode(['ok' => true, 'valid' => true, 'message' => 'Пароль подтверждён']);
+        } else {
+            echo json_encode(['ok' => false, 'valid' => false, 'message' => 'Неверный текущий пароль']);
+        }
+    } catch (PDOException $e) {
+        echo json_encode(['ok' => false, 'valid' => false, 'message' => 'Ошибка проверки пароля']);
     }
     exit;
 }
+
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../includes/functions.php';
+
+// Проверка авторизации
+if (!isset($_SESSION['user'])) {
+    header('Location: /?route=auth');
+    exit;
+}
+
+$user = current_user();
 
 // Определение активной вкладки
 $activeTab = $_GET['tab'] ?? 'profile';

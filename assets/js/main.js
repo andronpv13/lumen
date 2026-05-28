@@ -499,6 +499,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       input.classList.toggle('input-valid', valid);
       input.classList.toggle('input-invalid', invalid);
+
+      // Обновляем текст подсказки
       const field = input.dataset.field;
       let hint;
       if (field === 'current_password') {
@@ -509,10 +511,17 @@ document.addEventListener('DOMContentLoaded', function() {
       if (hint) {
         hint.textContent = message || '';
       }
-      // Обновляем состояние валидации
-      if (field && validationState[field]) {
-        validationState[field].valid = valid;
-        validationState[field].checked = true;
+
+      // Обновляем состояние валидации - используем правильное имя ключа
+      let stateKey = field;
+      if (field === 'current_password') {
+        stateKey = 'current';
+      } else if (field === 'password') {
+        stateKey = 'password';
+      }
+      if (stateKey && validationState[stateKey]) {
+        validationState[stateKey].valid = valid;
+        validationState[stateKey].checked = true;
       }
     }
 
