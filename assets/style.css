@@ -262,6 +262,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .admin-form{background:var(--bg);padding:20px;border-radius:var(--radius);margin:16px 0}
 .admin-form label{display:block;margin-bottom:12px;font-size:.9rem;color:var(--muted)}
 .admin-form input,.admin-form select,.admin-form textarea{width:100%;padding:9px;border:1px solid var(--border);border-radius:6px;margin-top:4px;font-family:inherit}
+.admin-form textarea[readonly]{background:#f5f5f5;cursor:not-allowed;opacity:0.7}
 .admin-form.inline{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
 .admin-form.inline label,.admin-form.inline input,.admin-form.inline select{flex:1;min-width:120px;margin:0}
 .admin-form.inline input,.admin-form.inline select{padding:9px;border:1px solid var(--border);border-radius:6px}

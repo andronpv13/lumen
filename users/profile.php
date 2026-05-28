@@ -33,6 +33,33 @@ if ($dbUser && isset($dbUser['address'])) {
 
 $action = $_POST['action'] ?? '';
 
+// AJAX-проверка текущего пароля
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['check_password'])) {
+    header('Content-Type: application/json');
+    $currentPassword = $_GET['check_password'] ?? '';
+
+    if ($currentPassword === '') {
+        echo json_encode(['ok' => false, 'valid' => false, 'message' => 'Введите текущий пароль']);
+        exit;
+    }
+
+    // Проверка пароля из сессии
+    if (password_verify($currentPassword, $user['password'])) {
+        echo json_encode(['ok' => true, 'valid' => true, 'message' => 'Пароль подтверждён']);
+    } else {
+        // Дополнительная проверка из БД
+        $stmt = db()->prepare("SELECT password FROM users WHERE id=?");
+        $stmt->execute([$user['id']]);
+        $dbUser = $stmt->fetch();
+        if ($dbUser && password_verify($currentPassword, $dbUser['password'])) {
+            echo json_encode(['ok' => true, 'valid' => true, 'message' => 'Пароль подтверждён']);
+        } else {
+            echo json_encode(['ok' => false, 'valid' => false, 'message' => 'Неверный текущий пароль']);
+        }
+    }
+    exit;
+}
+
 // Загрузка профиля доставки
 $deliveryProfile = null;
 $stmt = db()->prepare("SELECT * FROM user_delivery_profiles WHERE user_id=?");
@@ -189,10 +216,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_profile') {
     <label>Телефон <input type="tel" name="phone" value="<?= e($user['phone'] ?? '') ?>" placeholder="+7 введите ваш номер телефона"></label>
     <label>Адрес доставки <textarea name="address" readonly placeholder="Зарегистрируйте данные для доставки"><?= e($user['address'] ?? '') ?></textarea></label>
     <div class="password-row">
-      <label>Текущий пароль <input type="password" name="current_password" placeholder="Оставьте пустым, если не меняете пароль"></label>
-      <label>Новый пароль <input type="password" name="password" placeholder="Оставьте пустым, чтобы не менять"></label>
+      <label class="field-label">Текущий пароль
+        <div class="field-input-wrap">
+          <input type="password" name="current_password" id="profile-current-password" placeholder="Оставьте пустым, если не меняете пароль" data-field="current_password">
+          <button type="button" class="field-toggle" data-target="profile-current-password" aria-label="Показать пароль" data-visible="false" title="Показать пароль">
+            <svg class="icon-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <svg class="icon-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+          </button>
+        </div>
+        <div class="field-hint" id="hint-current-password"></div>
+      </label>
+      <label class="field-label">Новый пароль
+        <div class="field-input-wrap">
+          <input type="password" name="password" id="profile-password" minlength="6" placeholder="Оставьте пустым, чтобы не менять" data-field="password">
+          <button type="button" class="field-toggle" data-target="profile-password" aria-label="Показать пароль" data-visible="false" title="Показать пароль">
+            <svg class="icon-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <svg class="icon-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+          </button>
+        </div>
+        <div class="field-hint" id="hint-password"></div>
+      </label>
     </div>
-    <button class="btn btn-ghost">Сохранить профиль</button>
+    <button class="btn btn-ghost" id="profile-submit">Сохранить профиль</button>
   </form>
 
   <h3 style="margin-top: 2rem;">Данные для доставки</h3>

@@ -437,3 +437,255 @@ document.addEventListener('DOMContentLoaded', function() {
     initRegistrationValidation();
   }
 })();
+/**
+ * profile.php - Валидация формы смены пароля в профиле пользователя
+ */
+(function(){
+  function initProfilePasswordValidation() {
+    const currentPasswordInput = document.getElementById('profile-current-password');
+    const passwordInput = document.getElementById('profile-password');
+    const submitButton = document.getElementById('profile-submit');
+
+    if (!currentPasswordInput || !passwordInput || !submitButton) {
+      return;
+    }
+
+    const hints = {
+      current: document.getElementById('hint-current-password'),
+      password: document.getElementById('hint-password')
+    };
+
+    // Состояние валидации
+    const validationState = {
+      current: { valid: true, checked: false },
+      password: { valid: true, checked: false }
+    };
+
+    function setState(input, valid, message, forceInvalid) {
+      forceInvalid = forceInvalid || false;
+      const wrap = input.closest('.field-input-wrap');
+      const invalid = !valid && forceInvalid;
+      if (wrap) {
+        wrap.classList.toggle('input-valid', valid);
+        wrap.classList.toggle('input-invalid', invalid);
+      }
+      input.classList.toggle('input-valid', valid);
+      input.classList.toggle('input-invalid', invalid);
+      const field = input.dataset.field;
+      let hint;
+      if (field === 'current_password') {
+        hint = hints.current;
+      } else if (field === 'password') {
+        hint = hints.password;
+      }
+      if (hint) {
+        hint.textContent = message || '';
+      }
+      // Обновляем состояние валидации
+      if (field && validationState[field]) {
+        validationState[field].valid = valid;
+        validationState[field].checked = true;
+      }
+    }
+
+    function validateNoSpaces(value) {
+      return !/[\s\t]/.test(value);
+    }
+
+    function updateSubmitState() {
+      // Кнопка активна только если:
+      // 1. Пароль не заполнен (оставляем пустым = не меняем)
+      // 2. ИЛИ пароль заполнен и текущий пароль подтверждён
+      const passwordValue = passwordInput.value.trim();
+
+      if (!passwordValue) {
+        // Пароль не меняется - кнопка всегда активна (если нет ошибок в других полях)
+        submitButton.disabled = false;
+        return;
+      }
+
+      // Пароль меняется - проверяем валидность
+      const passwordValid = validationState.password.valid && validationState.password.checked;
+      const currentValid = validationState.current.valid && validationState.current.checked;
+
+      submitButton.disabled = !(passwordValid && currentValid);
+    }
+
+    function checkField(input, showEmptyAsValid) {
+      showEmptyAsValid = showEmptyAsValid || false;
+      if (!input) return { valid: false };
+      const field = input.dataset.field;
+      const rawValue = input.value;
+      const value = rawValue.trim();
+      let valid = true;
+      let message = '';
+      let forceInvalid = false;
+
+      if (!validateNoSpaces(rawValue)) {
+        valid = false;
+        message = 'Пробелы и табы запрещены';
+        forceInvalid = true;
+      } else if (!value) {
+        valid = showEmptyAsValid;
+        message = showEmptyAsValid ? '' : 'Поле не может быть пустым';
+        if (!showEmptyAsValid) {
+          forceInvalid = true;
+        }
+      } else if (field === 'current_password') {
+        // Текущий пароль - будет проверен через AJAX
+        valid = true;
+        message = '';
+      } else if (field === 'password') {
+        if (value.length < 6) {
+          valid = false;
+          message = 'Минимум 6 символов';
+          forceInvalid = true;
+        }
+      }
+
+      setState(input, valid, message, forceInvalid);
+      return { valid, message };
+    }
+
+    function checkCurrentPassword(input) {
+      const value = input.value.trim();
+      if (!value || !validateNoSpaces(input.value)) {
+        // Если поле пустое или содержит пробелы - не делаем AJAX запрос
+        if (!value) {
+          validationState.current.checked = true;
+          validationState.current.valid = true;
+        }
+        updateSubmitState();
+        return;
+      }
+
+      fetch('?check_password=' + encodeURIComponent(value), { credentials: 'same-origin' })
+        .then(res => res.json())
+        .then(data => {
+          if (!data.ok) {
+            // Ошибка проверки - неверный пароль
+            setState(input, false, data.message || 'Неверный текущий пароль', true);
+          } else {
+            // Пароль подтверждён
+            setState(input, true, data.message || 'Пароль подтверждён');
+          }
+          updateSubmitState();
+        })
+        .catch(() => {
+          // Ошибка запроса - помечаем как проверенное, но невалидное
+          validationState.current.checked = true;
+          validationState.current.valid = false;
+          setState(input, false, 'Ошибка проверки пароля', true);
+          updateSubmitState();
+        });
+    }
+
+    currentPasswordInput.dataset.field = 'current_password';
+    passwordInput.dataset.field = 'password';
+
+    // Обработчик кнопок "глаз" для показа/скрытия пароля
+    document.querySelectorAll('.field-toggle').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const targetId = this.getAttribute('data-target');
+        const input = document.getElementById(targetId);
+        if (!input) return;
+
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+
+        // Переключаем видимость иконок
+        const openIcon = this.querySelector('.icon-eye-open');
+        const closedIcon = this.querySelector('.icon-eye-closed');
+
+        if (isPassword) {
+          // Показываем пароль - скрываем открытый глаз, показываем зачёркнутый
+          if (openIcon) openIcon.style.display = 'none';
+          if (closedIcon) closedIcon.style.display = 'block';
+          this.setAttribute('aria-label', 'Скрыть пароль');
+          this.setAttribute('title', 'Скрыть пароль');
+        } else {
+          // Скрываем пароль - показываем открытый глаз, скрываем зачёркнутый
+          if (openIcon) openIcon.style.display = 'block';
+          if (closedIcon) closedIcon.style.display = 'none';
+          this.setAttribute('aria-label', 'Показать пароль');
+          this.setAttribute('title', 'Показать пароль');
+        }
+      });
+    });
+
+    const debounced = (fn, delay) => {
+      delay = delay || 300;
+      let timeout;
+      return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn.apply(this, args), delay);
+      };
+    };
+
+    // Проверка текущего пароля при вводе (с задержкой для AJAX)
+    currentPasswordInput.addEventListener('input', debounced(() => {
+      const result = checkField(currentPasswordInput, true);
+      if (result.valid && currentPasswordInput.value.trim()) {
+        checkCurrentPassword(currentPasswordInput);
+      } else if (!currentPasswordInput.value.trim()) {
+        // Поле пустое - сбрасываем состояние
+        validationState.current.checked = true;
+        validationState.current.valid = true;
+        setState(currentPasswordInput, true, '');
+        updateSubmitState();
+      } else {
+        validationState.current.checked = true;
+        updateSubmitState();
+      }
+    }));
+
+    // Проверка нового пароля при вводе
+    passwordInput.addEventListener('input', () => {
+      const result = checkField(passwordInput, true);
+      if (!result.valid) {
+        validationState.password.checked = true;
+      } else {
+        validationState.password.checked = true;
+      }
+      updateSubmitState();
+    });
+
+    // Потеря фокуса на поле текущего пароля - финальная проверка
+    currentPasswordInput.addEventListener('blur', () => {
+      const value = currentPasswordInput.value.trim();
+      if (value && validateNoSpaces(currentPasswordInput.value)) {
+        checkCurrentPassword(currentPasswordInput);
+      }
+    });
+
+    // Изначально кнопка активна (пароль можно не менять)
+    submitButton.disabled = false;
+
+    submitButton.addEventListener('click', function(event) {
+      const passwordValue = passwordInput.value.trim();
+
+      if (passwordValue) {
+        // Если пароль меняется - проверяем все поля
+        const currentResult = checkField(currentPasswordInput, false);
+        const passwordResult = checkField(passwordInput, false);
+
+        if (!currentResult.valid || !passwordResult.valid) {
+          event.preventDefault();
+        } else if (!validationState.current.checked || !validationState.password.checked) {
+          // Если проверка ещё не завершена - предотвращаем отправку
+          event.preventDefault();
+        } else if (!validationState.current.valid || !validationState.password.valid) {
+          event.preventDefault();
+        }
+      }
+      // Если пароль пустой - форма отправляется без проверки паролей
+    });
+  }
+
+  // Инициализация после загрузки DOM
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initProfilePasswordValidation);
+  } else {
+    initProfilePasswordValidation();
+  }
+})();
