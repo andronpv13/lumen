@@ -464,12 +464,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function setState(input, valid, message, forceInvalid) {
       forceInvalid = forceInvalid || false;
       const wrap = input.closest('.field-input-wrap');
+      const label = input.closest('.field-label');
       const invalid = !valid && forceInvalid;
 
       // Если поле пустое - убираем всю подсветку
       if (!input.value.trim()) {
         if (wrap) {
           wrap.classList.remove('input-valid', 'input-invalid');
+        }
+        if (label) {
+          label.classList.remove('input-valid', 'input-invalid');
         }
         input.classList.remove('input-valid', 'input-invalid');
         const field = input.dataset.field;
@@ -488,6 +492,10 @@ document.addEventListener('DOMContentLoaded', function() {
       if (wrap) {
         wrap.classList.toggle('input-valid', valid);
         wrap.classList.toggle('input-invalid', invalid);
+      }
+      if (label) {
+        label.classList.toggle('input-valid', valid);
+        label.classList.toggle('input-invalid', invalid);
       }
       input.classList.toggle('input-valid', valid);
       input.classList.toggle('input-invalid', invalid);
@@ -584,7 +592,18 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      fetch('/?route=users&tab=profile&check_password=' + encodeURIComponent(value), { credentials: 'same-origin' })
+      // Снимаем любую предыдущую подсветку перед AJAX-запросом
+      const wrap = input.closest('.field-input-wrap');
+      const label = input.closest('.field-label');
+      if (wrap) {
+        wrap.classList.remove('input-valid', 'input-invalid');
+      }
+      if (label) {
+        label.classList.remove('input-valid', 'input-invalid');
+      }
+      input.classList.remove('input-valid', 'input-invalid');
+
+      fetch('/?route=users&check_password=' + encodeURIComponent(value), { credentials: 'same-origin' })
         .then(res => {
           if (!res.ok) {
             throw new Error('HTTP error ' + res.status);
@@ -593,13 +612,15 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
           if (data.ok && data.valid) {
-            // Пароль подтверждён
+            // Пароль подтверждён - подсвечиваем зелёным
             setState(input, true, data.message || 'Пароль подтверждён');
             validationState.current.valid = true;
+            validationState.current.checked = true;
           } else {
-            // Ошибка проверки - неверный пароль
+            // Ошибка проверки - неверный пароль, подсвечиваем красным
             setState(input, false, data.message || 'Неверный текущий пароль', true);
             validationState.current.valid = false;
+            validationState.current.checked = true;
           }
           updateSubmitState();
         })

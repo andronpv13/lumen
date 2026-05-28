@@ -2,7 +2,7 @@
 :root{
   --bg:#faf6f0; --card:#fff; --text:#2a241c; --muted:#7a6f60;
   --primary:#8b5a2b; --primary-dark:#6b4420; --accent:#d4a574;
-  --border:#e8dfd2; --success:#2d7a4f; --error:#b33a3a;
+  --border:#e8dfd2; --success:#40df10; --error:#f11414;
   --radius:10px; --shadow:0 2px 12px rgba(90,60,20,.08);
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -36,7 +36,7 @@ input::-webkit-search-results-decoration {
     display: none;
 }
 
-/* Header */
+/* Шапка сайта */
 .site-header{background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
 .header-inner{display:flex;align-items:center;justify-content:space-between;gap:20px}
 .logo{font-size:1.3rem;font-weight:700;color:var(--text)}
@@ -53,19 +53,19 @@ input::-webkit-search-results-decoration {
 .hero h1{font-size:2.2rem;margin-bottom:12px;color:var(--primary-dark)}
 .hero p{font-size:1.1rem;color:var(--muted)}
 
-/* Filter */
+/* Фильтр */
 .filter-bar{display:flex;gap:10px;margin-bottom:30px;flex-wrap:wrap}
 .filter-bar input,.filter-bar select{flex:1;min-width:160px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:.95rem;background:var(--card)}
 .filter-bar button{padding:10px 20px;background:var(--primary);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-size:.95rem}
 
-/* Catalog header with filter */
+/* Заголовок каталога с фильтром */
 .catalog-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:30px;position:relative}
 .catalog-title{margin:0;position:absolute;left:50%;transform:translateX(-50%);text-align:center}
 .filter-sidebar-inline select{padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:.95rem;background:var(--card);cursor:pointer;min-width:180px}
 
 .catalog-container{display:block}
 
-/* Product grid */
+/* Сетка продуктов */
 .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:22px;margin-bottom:30px;flex:1}
 .product-grid.home-grid{justify-content:center;max-width:1200px;margin-left:auto;margin-right:auto}
 .product-grid.reviews-grid{grid-template-columns:repeat(3,1fr);align-items:start}
@@ -82,12 +82,12 @@ input::-webkit-search-results-decoration {
 .price{font-weight:700;font-size:1.15rem;color:var(--primary-dark)}
 .out-of-stock{color:var(--error);font-size:.85rem}
 
-/* Reviews grid on homepage */
+/* Отзывы на главной странице */
 .reviews-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:22px;margin-bottom:30px;width:100%}
 .home-reviews{text-align:center}
 .home-reviews h2{text-align:center;margin-bottom:24px}
 
-/* Buttons */
+/* Кнопки */
 .btn{display:inline-block;padding:10px 18px;border:none;border-radius:var(--radius);font-size:.95rem;cursor:pointer;transition:all .2s;text-decoration:none;background:var(--border);color:var(--text)}
 .btn:disabled{
   opacity:.55;
@@ -99,7 +99,7 @@ input::-webkit-search-results-decoration {
 .btn-sm{padding:6px 12px;font-size:.85rem}
 .btn-lg{padding:14px 28px;font-size:1.05rem;width:100%}
 
-/* Product detail */
+/* Детали продукта */
 .product-detail{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin:30px 0}
 .pd-image img{width:100%;border-radius:var(--radius);background:#eee;aspect-ratio:1;object-fit:cover}
 .pd-info h1{font-size:2rem;margin:10px 0}
@@ -110,7 +110,7 @@ input::-webkit-search-results-decoration {
 .add-to-cart-form{display:flex;gap:10px;align-items:center}
 .add-to-cart-form input[type=number]{width:80px;padding:10px;border:1px solid var(--border);border-radius:var(--radius)}
 
-/* Ratings */
+/* Рейтинги */
 .rating-summary{display:flex;align-items:center;gap:6px;color:var(--muted);margin-bottom:8px}
 .star-filled{color:#f4b740}
 .star-empty{color:#d4c7b0}
@@ -121,7 +121,7 @@ input::-webkit-search-results-decoration {
 .review-header .rating{display:inline-block;width:100px;height:20px;background:#d4c7b0;position:relative}
 .review-header .rating::before{content:'';position:absolute;left:0;top:0;height:20px;background:#f4b740;overflow:hidden}
 
-/* Reviews */
+/* Отзывы */
 .reviews-section{margin:40px 0}
 .reviews-section h2{margin-bottom:20px}
 .review-form{background:var(--card);padding:20px;border-radius:var(--radius);border:1px solid var(--border);width:100%;box-sizing:border-box}
@@ -133,12 +133,12 @@ input::-webkit-search-results-decoration {
 .review header{display:flex;gap:12px;align-items:center;margin-bottom:8px;flex-wrap:wrap;font-size:.9rem}
 .review time{color:var(--muted);margin-left:auto}
 
-/* Star rating input for review form */
+/* Звездный рейтинг */
 .star-rating-input{display:flex;gap:4px;justify-content:center;margin-bottom:12px}
 .star-rating-input span{cursor:pointer;font-size:1.8rem;color:#d4c7b0;transition:color .15s}
 .star-rating-input span.active,.star-rating-input span:hover{color:#f4b740}
 
-/* Cart */
+/* Корзина */
 .cart-table{width:100%;background:var(--card);border-radius:var(--radius);overflow:hidden;border-collapse:collapse;box-shadow:var(--shadow);margin-bottom:20px}
 .cart-table th,.cart-table td{padding:14px;text-align:left;border-bottom:1px solid var(--border)}
 .cart-table th{background:#f5ede0;font-weight:600;font-size:.9rem}
@@ -148,7 +148,7 @@ input::-webkit-search-results-decoration {
 .qty-form input{width:70px;padding:6px;border:1px solid var(--border);border-radius:6px;text-align:center}
 .cart-actions{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 
-/* Checkout */
+/* Оформление заказа */
 .checkout-grid{display:grid;grid-template-columns:2fr 1fr;gap:30px;margin:20px 0}
 .checkout-form{background:var(--card);padding:24px;border-radius:var(--radius);box-shadow:var(--shadow)}
 .checkout-form h2{margin-bottom:16px;font-size:1.2rem}
@@ -167,7 +167,7 @@ input::-webkit-search-results-decoration {
 .summary-row.total{font-size:1.2rem;padding-top:14px}
 hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 
-/* Auth */
+/* Регистрация и вход */
 .auth-wrap{max-width:420px;margin:40px auto;background:var(--card);padding:32px;border-radius:var(--radius);box-shadow:var(--shadow)}
 .tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border)}
 .tabs a{padding:10px 16px;color:var(--muted)}
@@ -175,18 +175,18 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .auth-form label{display:block;margin-bottom:18px}
 .auth-form input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);margin-top:4px}
 .auth-form .btn{width:100%;margin-top:10px}
-.field-label{font-weight:600;color:var(--text)}
-.field-input-wrap{position:relative;border-radius:var(--radius);overflow:hidden}
+.field-label{font-weight:600;color:var(--text);display:flex;flex-direction:column}
+.field-input-wrap{position:relative;border-radius:var(--radius);overflow:visible}
 .field-input-wrap input{width:100%;padding-right:40px;border-radius:var(--radius)}
 .field-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);border:none;background:none;padding:0;font-size:1.1rem;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center}
 .field-toggle svg{width:20px;height:20px;display:block}
 .field-hint{margin-top:6px;font-size:.85rem;color:var(--muted);min-height:18px}
-.input-valid,.field-input-wrap.input-valid input{border-color:#12e40b!important;background:#12e40ba9!important}
-.input-invalid,.field-input-wrap.input-invalid input{border-color:#ee3f0a!important;background:#ee3f0ab9!important}
-.field-input-wrap.input-invalid + .field-hint{color:#b33a3a}
-.field-input-wrap.input-valid + .field-hint{color:#2d7a4f}
+.input-valid,.field-input-wrap.input-valid input{border-color:#12e40b!important;background:transparent!important}
+.input-invalid,.field-input-wrap.input-invalid input{border-color:#ee3f0a!important;background:transparent!important}
+.field-label.input-valid .field-hint{color:#12e40b}
+.field-label.input-invalid .field-hint{color:#ee3f0a}
 
-/* Orders */
+/* Заказы */
 .status{padding:3px 10px;border-radius:10px;font-size:.8rem;font-weight:500}
 .status-new{background:#fff3cd;color:#856404}
 .status-processing{background:#cfe2ff;color:#084298}
@@ -197,7 +197,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .back{display:inline-block;margin-bottom:14px;color:var(--muted)}
 .order-detail{background:var(--card);padding:24px;border-radius:var(--radius);box-shadow:var(--shadow);max-width:800px;width:100%}
 
-/* Pagination */
+/* Пагинация */
 .pagination{display:flex;gap:6px;justify-content:center;margin:30px 0}
 .pagination a{padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);text-decoration:none}
 .pagination a.active{background:var(--primary);color:#fff;border-color:var(--primary)}
@@ -243,7 +243,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .muted{color:var(--muted)}
 .small{font-size:.85rem}
 
-/* Admin */
+/* Админка */
 .admin-layout{display:grid;grid-template-columns:240px 1fr;gap:24px;margin-top:20px}
 .admin-sidebar{background:var(--card);padding:20px;border-radius:var(--radius);box-shadow:var(--shadow);height:fit-content;position:sticky;top:80px}
 .admin-sidebar h3{margin-bottom:16px;font-size:1.05rem;color:var(--primary-dark)}
@@ -270,7 +270,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .form-row label{flex:1;min-width:200px;display:block;margin-bottom:12px;font-size:.9rem;color:var(--muted)}
 .form-row input,.form-row select,.form-row textarea{width:100%;padding:9px;border:1px solid var(--border);border-radius:6px;margin-top:4px;font-family:inherit}
 .password-row{display:flex;gap:16px;flex-wrap:wrap}
-.password-row label{flex:1;min-width:200px;display:block;margin-bottom:12px;font-size:.9rem;color:var(--muted)}
+.password-row .field-label{flex:1;min-width:200px;margin-bottom:12px;font-size:.9rem;color:var(--muted)}
 .password-row input{width:100%;padding:9px;border:1px solid var(--border);border-radius:6px;margin-top:4px;font-family:inherit}
 .checkbox{display:flex;align-items:center;gap:8px}
 
@@ -287,13 +287,13 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .review-footer .author{font-weight:600;color:var(--muted)}
 .reviews-list li{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
 
-/* Footer */
+/* Подвал сайта */
 .site-footer{background:var(--text);color:#d4c7b0;margin-top:40px;padding:14px 0}
 .footer-inner{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
 .site-footer strong{color:#fff}
 .site-footer p{font-size:.9rem;margin:4px 0}
 
-/* Responsive */
+/* Адаптивность */
 @media (max-width: 900px){
   .catalog-container{grid-template-columns:1fr}
   .filter-sidebar{position:static}
@@ -319,7 +319,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0}
   .container{padding:12px}
 }
 
-/* Delivery grid */
+/* Сетка доставки */
 .delivery-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:10px}
 .delivery-grid label{display:flex;flex-direction:column;font-size:.9rem;color:var(--muted)}
 .delivery-grid input{padding:9px;border:1px solid var(--border);border-radius:6px;margin-top:4px;font-family:inherit;font-size:.95rem}
