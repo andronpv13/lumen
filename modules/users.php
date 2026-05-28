@@ -11,7 +11,7 @@ if (!isset($_SESSION['user'])) {
 
 $user = current_user();
 
-// AJAX-проверка текущего пароля (должна быть до任何 вывода)
+// AJAX-проверка текущего пароля (должна быть до любого вывода и до загрузки вкладок)
 if (isset($_GET['check_password'])) {
     header('Content-Type: application/json');
     $currentPassword = $_GET['check_password'] ?? '';
@@ -27,19 +27,15 @@ if (isset($_GET['check_password'])) {
         exit;
     }
 
-    // Проверка пароля из сессии
-    if (password_verify($currentPassword, $user['password'])) {
+    // Получаем актуальный хеш пароля из БД (в сессии пароль не хранится)
+    $stmt = db()->prepare("SELECT password FROM users WHERE id=?");
+    $stmt->execute([$user['id']]);
+    $dbUser = $stmt->fetch();
+
+    if ($dbUser && password_verify($currentPassword, $dbUser['password'])) {
         echo json_encode(['ok' => true, 'valid' => true, 'message' => 'Пароль подтверждён']);
     } else {
-        // Дополнительная проверка из БД
-        $stmt = db()->prepare("SELECT password FROM users WHERE id=?");
-        $stmt->execute([$user['id']]);
-        $dbUser = $stmt->fetch();
-        if ($dbUser && password_verify($currentPassword, $dbUser['password'])) {
-            echo json_encode(['ok' => true, 'valid' => true, 'message' => 'Пароль подтверждён']);
-        } else {
-            echo json_encode(['ok' => false, 'valid' => false, 'message' => 'Неверный текущий пароль']);
-        }
+        echo json_encode(['ok' => false, 'valid' => false, 'message' => 'Неверный текущий пароль']);
     }
     exit;
 }

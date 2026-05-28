@@ -21,20 +21,8 @@ if (!isset($user)) {
     $user = current_user();
 }
 
-// Принудительная загрузка актуального адреса из БД для отображения в форме
-$stmt = db()->prepare("SELECT address FROM users WHERE id=?");
-$stmt->execute([$user['id']]);
-$dbUser = $stmt->fetch();
-if ($dbUser && isset($dbUser['address'])) {
-    $user['address'] = $dbUser['address'];
-    // Обновляем сессию актуальными данными
-    $_SESSION['user']['address'] = $dbUser['address'];
-}
-
-$action = $_POST['action'] ?? '';
-
-// AJAX-проверка текущего пароля
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['check_password'])) {
+// AJAX-проверка текущего пароля (должна быть до любого вывода и до запросов к БД)
+if (isset($_GET['check_password'])) {
     header('Content-Type: application/json');
     $currentPassword = $_GET['check_password'] ?? '';
 
@@ -49,19 +37,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['check_password'])) {
         exit;
     }
 
-    // Проверка пароля из сессии
-    if (password_verify($currentPassword, $user['password'])) {
+    // Получаем актуальный хеш пароля из БД (в сессии пароль не хранится)
+    $stmt = db()->prepare("SELECT password FROM users WHERE id=?");
+    $stmt->execute([$user['id']]);
+    $dbUser = $stmt->fetch();
+
+    if ($dbUser && password_verify($currentPassword, $dbUser['password'])) {
         echo json_encode(['ok' => true, 'valid' => true, 'message' => 'Пароль подтверждён']);
     } else {
-        // Дополнительная проверка из БД
-        $stmt = db()->prepare("SELECT password FROM users WHERE id=?");
-        $stmt->execute([$user['id']]);
-        $dbUser = $stmt->fetch();
-        if ($dbUser && password_verify($currentPassword, $dbUser['password'])) {
-            echo json_encode(['ok' => true, 'valid' => true, 'message' => 'Пароль подтверждён']);
-        } else {
-            echo json_encode(['ok' => false, 'valid' => false, 'message' => 'Неверный текущий пароль']);
-        }
+        echo json_encode(['ok' => false, 'valid' => false, 'message' => 'Неверный текущий пароль']);
+    }
+    exit;
+}
+
+// Принудительная загрузка актуального адреса из БД для отображения в форме
+$stmt = db()->prepare("SELECT address FROM users WHERE id=?");
+$stmt->execute([$user['id']]);
+$dbUser = $stmt->fetch();
+if ($dbUser && isset($dbUser['address'])) {
+    $user['address'] = $dbUser['address'];
+    // Обновляем сессию актуальными данными
+    $_SESSION['user']['address'] = $dbUser['address'];
+}
+
+$action = $_POST['action'] ?? '';
+
+// AJAX-проверка текущего пароля (должна быть до любого вывода)
+if (isset($_GET['check_password'])) {
+    header('Content-Type: application/json');
+    $currentPassword = $_GET['check_password'] ?? '';
+
+    // Проверка на наличие пробелов
+    if (preg_match('/\s/', $currentPassword)) {
+        echo json_encode(['ok' => false, 'valid' => false, 'message' => 'Пробелы запрещены']);
+        exit;
+    }
+
+    if ($currentPassword === '') {
+        echo json_encode(['ok' => false, 'valid' => false, 'message' => 'Введите текущий пароль']);
+        exit;
+    }
+
+    // Получаем актуальный хеш пароля из БД (в сессии пароль не хранится)
+    $stmt = db()->prepare("SELECT password FROM users WHERE id=?");
+    $stmt->execute([$user['id']]);
+    $dbUser = $stmt->fetch();
+
+    if ($dbUser && password_verify($currentPassword, $dbUser['password'])) {
+        echo json_encode(['ok' => true, 'valid' => true, 'message' => 'Пароль подтверждён']);
+    } else {
+        echo json_encode(['ok' => false, 'valid' => false, 'message' => 'Неверный текущий пароль']);
     }
     exit;
 }

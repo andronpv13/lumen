@@ -585,21 +585,27 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       fetch('/?route=users&tab=profile&check_password=' + encodeURIComponent(value), { credentials: 'same-origin' })
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('HTTP error ' + res.status);
+          }
+          return res.json();
+        })
         .then(data => {
-          if (!data.ok) {
-            // Ошибка проверки - неверный пароль
-            setState(input, false, data.message || 'Неверный текущий пароль', true);
-            validationState.current.valid = false;
-          } else {
+          if (data.ok && data.valid) {
             // Пароль подтверждён
             setState(input, true, data.message || 'Пароль подтверждён');
             validationState.current.valid = true;
+          } else {
+            // Ошибка проверки - неверный пароль
+            setState(input, false, data.message || 'Неверный текущий пароль', true);
+            validationState.current.valid = false;
           }
           updateSubmitState();
         })
-        .catch(() => {
+        .catch((err) => {
           // Ошибка запроса - помечаем как проверенное, но невалидное
+          console.error('Ошибка проверки пароля:', err);
           validationState.current.checked = true;
           validationState.current.valid = false;
           setState(input, false, 'Ошибка проверки пароля', true);

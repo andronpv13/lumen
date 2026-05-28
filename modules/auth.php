@@ -49,8 +49,8 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         }
         $u = $stmt->fetch();
         if ($u && password_verify($_POST['password'], $u['password'])) {
-            unset($u['password']);
-            $_SESSION['user'] = $u;
+            // Сохраняем в сессию только необходимые данные, без пароля
+            $_SESSION['user'] = ['id'=>(int)$u['id'], 'email'=>$u['email'], 'name'=>$u['name'], 'role'=>$u['role'], 'phone'=>$u['phone'] ?? '', 'address'=>$u['address'] ?? ''];
             flash('Добро пожаловать, '. $u['name'] .'!','success');
             redirect('/');
         } else {
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
                 $stmt = db()->prepare("INSERT INTO users (email,password,name,role) VALUES (?,?,?,'customer')");
                 $stmt->execute([$email, $hash, $name]);
                 $id = db()->lastInsertId();
-                $_SESSION['user'] = ['id'=>(int)$id, 'email'=>$email, 'name'=>$name, 'role'=>'customer'];
+                $_SESSION['user'] = ['id'=>(int)$id, 'email'=>$email, 'name'=>$name, 'role'=>'customer', 'phone'=>'', 'address'=>''];
                 flash('Регистрация успешна!','success');
                 redirect('/');
             }
