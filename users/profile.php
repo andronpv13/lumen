@@ -113,15 +113,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_profile') {
         } else {
             // Проверка текущего пароля при смене пароля
             if ($password !== '') {
-                if (!password_verify($currentPassword, $user['password'])) {
+                $stmt = db()->prepare("SELECT password FROM users WHERE id=?");
+                $stmt->execute([$user['id']]);
+                $dbUser = $stmt->fetch();
+                if (!$dbUser || !password_verify($currentPassword, $dbUser['password'])) {
                     flash('Неверный текущий пароль','error');
-                } else {
-                    $stmt = db()->prepare("SELECT password FROM users WHERE id=?");
-                    $stmt->execute([$user['id']]);
-                    $dbUser = $stmt->fetch();
-                    if (!password_verify($currentPassword, $dbUser['password'])) {
-                        flash('Неверный текущий пароль','error');
-                    }
                 }
             }
 

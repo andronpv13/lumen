@@ -612,7 +612,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       input.classList.remove('input-valid', 'input-invalid');
 
-      fetch('/?route=users&check_password=' + encodeURIComponent(value), { credentials: 'same-origin' })
+      fetch('/?route=users', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'check_password=' + encodeURIComponent(value), credentials: 'same-origin' })
         .then(res => {
           if (!res.ok) {
             throw new Error('HTTP error ' + res.status);

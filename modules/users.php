@@ -2,7 +2,7 @@
 // modules/users.php - Личный кабинет пользователя
 
 // AJAX-проверка текущего пароля (должна быть ДО подключения config.php и любых других операций)
-if (isset($_GET['check_password']) || isset($_POST['check_password'])) {
+if (isset($_POST['check_password'])) {
     // Начинаем сессию для доступа к данным пользователя
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
@@ -17,7 +17,7 @@ if (isset($_GET['check_password']) || isset($_POST['check_password'])) {
     }
 
     $user = $_SESSION['user'];
-    $currentPassword = $_GET['check_password'] ?? $_POST['check_password'] ?? '';
+    $currentPassword = $_POST['check_password'] ?? '';
 
     // Проверка на наличие пробелов
     if (preg_match('/\s/', $currentPassword)) {
