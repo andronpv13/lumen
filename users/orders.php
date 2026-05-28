@@ -87,7 +87,7 @@ $statusLabels = ['new'=>'Новый','processing'=>'В обработке','paid
           <td><?= money($o['total']) ?></td>
           <td><span class="status status-<?= $o['status'] ?>"><?= $statusLabels[$o['status']] ?? $o['status'] ?></span></td>
           <td><?= $o['payment_status']==='paid'?'Оплачен':'Ожидает' ?></td>
-          <td><a href="?tab=orders&order_id=<?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a></td>
+          <td><a href="/?route=users&tab=orders&order_id=<?= $o['id'] ?>" class="btn btn-sm btn-ghost">Детали</a></td>
         </tr>
       <?php endforeach; ?>
       </tbody>

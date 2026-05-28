@@ -21,6 +21,16 @@ if (!isset($user)) {
     $user = current_user();
 }
 
+// Принудительная загрузка актуального адреса из БД для отображения в форме
+$stmt = db()->prepare("SELECT address FROM users WHERE id=?");
+$stmt->execute([$user['id']]);
+$dbUser = $stmt->fetch();
+if ($dbUser && isset($dbUser['address'])) {
+    $user['address'] = $dbUser['address'];
+    // Обновляем сессию актуальными данными
+    $_SESSION['user']['address'] = $dbUser['address'];
+}
+
 $action = $_POST['action'] ?? '';
 
 // Загрузка профиля доставки
@@ -33,10 +43,13 @@ $deliveryProfile = $stmt->fetch() ?: null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_profile') {
     csrf_check();
 
+    // Проверяем, какая форма была отправлена (по наличию ключевых полей)
+    $isDeliveryForm = isset($_POST['last_name']) || isset($_POST['first_name']) || isset($_POST['city']);
+
+    // Поля профиля
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
-    $address = trim($_POST['address'] ?? '');
     $password = $_POST['password'] ?? '';
     $currentPassword = $_POST['current_password'] ?? '';
 
@@ -52,38 +65,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_profile') {
     $building = trim($_POST['building'] ?? '');
     $apartment = trim($_POST['apartment'] ?? '');
 
-    if (!$name || !$email) {
-        flash('Заполните имя и email','error');
-    } elseif ($password !== '' && strlen($password) < 6) {
-        flash('Пароль должен быть не менее 6 символов','error');
-    } else {
-        // Проверка текущего пароля при смене пароля
-        if ($password !== '') {
-            if (!password_verify($currentPassword, $user['password'])) {
-                flash('Неверный текущий пароль','error');
-            } else {
-                $stmt = db()->prepare("SELECT password FROM users WHERE id=?");
-                $stmt->execute([$user['id']]);
-                $dbUser = $stmt->fetch();
-                if (!password_verify($currentPassword, $dbUser['password'])) {
-                    flash('Неверный текущий пароль','error');
-                }
-            }
-        }
-
-        if (empty($_SESSION['flash'])) {
+    if ($isDeliveryForm) {
+        // Сохранение только данных доставки
+        if (!$firstName || !$lastName || !$city || !$street || !$building) {
+            flash('Заполните обязательные поля доставки (Фамилия, Имя, Город, Улица, Дом)','error');
+        } else {
             try {
-                $params = [$name, $email, $phone, $address];
-                $sql = 'UPDATE users SET name=?, email=?, phone=?, address=?';
-                if ($password !== '') {
-                    $sql .= ', password=?';
-                    $params[] = password_hash($password, PASSWORD_BCRYPT);
-                }
-                $sql .= ' WHERE id=?';
-                $params[] = $user['id'];
-                db()->prepare($sql)->execute($params);
+                // Формирование адреса доставки из профиля
+                $fullAddress = trim("$lastName $firstName $middleName $postalCode $region $district $city $street $building $apartment");
+                $fullAddress = preg_replace('/\s+/', ' ', $fullAddress);
 
-                // Сохранение профиля доставки
+                // Сохранение профиля доставки и обновление адреса в users
                 if ($deliveryProfile) {
                     db()->prepare("UPDATE user_delivery_profiles SET first_name=?, last_name=?, middle_name=?, postal_code=?, region=?, district=?, city=?, street=?, building=?, apartment=? WHERE user_id=?")
                         ->execute([$firstName, $lastName, $middleName, $postalCode, $region, $district, $city, $street, $building, $apartment, $user['id']]);
@@ -92,27 +84,99 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_profile') {
                         ->execute([$user['id'], $firstName, $lastName, $middleName, $postalCode, $region, $district, $city, $street, $building, $apartment]);
                 }
 
-                $_SESSION['user'] = [
-                    'id' => $user['id'],
-                    'name' => $name,
-                    'email' => $email,
-                    'role' => $user['role'],
-                    'phone' => $phone,
-                    'address' => $address,
-                ];
+                // Обновление поля address в таблице users на основе данных профиля доставки
+                db()->prepare("UPDATE users SET address=? WHERE id=?")->execute([$fullAddress, $user['id']]);
+
+                // Обновление сессии
+                $_SESSION['user']['address'] = $fullAddress;
                 $user = current_user();
-                flash('Профиль сохранён','success');
+
+                // Перезагрузка профиля доставки
+                $stmt = db()->prepare("SELECT * FROM user_delivery_profiles WHERE user_id=?");
+                $stmt->execute([$user['id']]);
+                $deliveryProfile = $stmt->fetch() ?: null;
+
+                flash('Адрес доставки сохранён','success');
 
             } catch (PDOException $e) {
-                flash('Ошибка сохранения профиля: ' . $e->getMessage(),'error');
+                flash('Ошибка сохранения адреса доставки: ' . $e->getMessage(),'error');
+            }
+        }
+    } else {
+        // Сохранение профиля пользователя
+        if (!$name || !$email) {
+            flash('Заполните имя и email','error');
+        } elseif ($password !== '' && strlen($password) < 6) {
+            flash('Пароль должен быть не менее 6 символов','error');
+        } else {
+            // Проверка текущего пароля при смене пароля
+            if ($password !== '') {
+                if (!password_verify($currentPassword, $user['password'])) {
+                    flash('Неверный текущий пароль','error');
+                } else {
+                    $stmt = db()->prepare("SELECT password FROM users WHERE id=?");
+                    $stmt->execute([$user['id']]);
+                    $dbUser = $stmt->fetch();
+                    if (!password_verify($currentPassword, $dbUser['password'])) {
+                        flash('Неверный текущий пароль','error');
+                    }
+                }
+            }
+
+            if (empty($_SESSION['flash'])) {
+                try {
+                    $params = [$name, $email, $phone];
+                    $sql = 'UPDATE users SET name=?, email=?, phone=?';
+                    if ($password !== '') {
+                        $sql .= ', password=?';
+                        $params[] = password_hash($password, PASSWORD_BCRYPT);
+                    }
+                    $sql .= ' WHERE id=?';
+                    $params[] = $user['id'];
+                    db()->prepare($sql)->execute($params);
+
+                    // Формирование адреса доставки из профиля
+                    $fullAddress = trim("$lastName $firstName $middleName $postalCode $region $district $city $street $building $apartment");
+                    $fullAddress = preg_replace('/\s+/', ' ', $fullAddress);
+
+                    // Сохранение профиля доставки и обновление адреса в users
+                    if ($deliveryProfile) {
+                        db()->prepare("UPDATE user_delivery_profiles SET first_name=?, last_name=?, middle_name=?, postal_code=?, region=?, district=?, city=?, street=?, building=?, apartment=? WHERE user_id=?")
+                            ->execute([$firstName, $lastName, $middleName, $postalCode, $region, $district, $city, $street, $building, $apartment, $user['id']]);
+                    } elseif (!empty($firstName) || !empty($lastName)) {
+                        db()->prepare("INSERT INTO user_delivery_profiles (user_id, first_name, last_name, middle_name, postal_code, region, district, city, street, building, apartment) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
+                            ->execute([$user['id'], $firstName, $lastName, $middleName, $postalCode, $region, $district, $city, $street, $building, $apartment]);
+                    }
+
+                    // Обновление поля address в таблице users на основе данных профиля доставки
+                    if (!empty($fullAddress)) {
+                        db()->prepare("UPDATE users SET address=? WHERE id=?")->execute([$fullAddress, $user['id']]);
+                    }
+
+                    $_SESSION['user'] = [
+                        'id' => $user['id'],
+                        'name' => $name,
+                        'email' => $email,
+                        'role' => $user['role'],
+                        'phone' => $phone,
+                        'address' => $fullAddress,
+                    ];
+                    $user = current_user();
+                    flash('Профиль сохранён','success');
+
+                } catch (PDOException $e) {
+                    flash('Ошибка сохранения профиля: ' . $e->getMessage(),'error');
+                }
             }
         }
     }
 
-    // Перезагрузка профиля доставки после сохранения
-    $stmt = db()->prepare("SELECT * FROM user_delivery_profiles WHERE user_id=?");
-    $stmt->execute([$user['id']]);
-    $deliveryProfile = $stmt->fetch() ?: null;
+    // Перезагрузка профиля доставки после сохранения (если еще не загружен)
+    if ($isDeliveryForm && empty($deliveryProfile)) {
+        $stmt = db()->prepare("SELECT * FROM user_delivery_profiles WHERE user_id=?");
+        $stmt->execute([$user['id']]);
+        $deliveryProfile = $stmt->fetch() ?: null;
+    }
 }
 ?>
 
@@ -122,8 +186,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_profile') {
     <input type="hidden" name="action" value="save_profile">
     <label>Логин <input type="text" name="name" value="<?= e($user['name']) ?>" required></label>
     <label>Email <input type="email" name="email" value="<?= e($user['email']) ?>" required></label>
-    <label>Телефон <input type="tel" name="phone" value="<?= e($user['phone'] ?? '') ?>"></label>
-    <label>Адрес доставки <textarea name="address"><?= e($user['address'] ?? '') ?></textarea></label>
+    <label>Телефон <input type="tel" name="phone" value="<?= e($user['phone'] ?? '') ?>" placeholder="+7 введите ваш номер телефона"></label>
+    <label>Адрес доставки <textarea name="address" readonly placeholder="Зарегистрируйте данные для доставки"><?= e($user['address'] ?? '') ?></textarea></label>
     <div class="password-row">
       <label>Текущий пароль <input type="password" name="current_password" placeholder="Оставьте пустым, если не меняете пароль"></label>
       <label>Новый пароль <input type="password" name="password" placeholder="Оставьте пустым, чтобы не менять"></label>
@@ -147,6 +211,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_profile') {
       <label>Дом * <input type="text" name="building" value="<?= e($deliveryProfile['building'] ?? '') ?>" required></label>
       <label>Квартира <input type="text" name="apartment" value="<?= e($deliveryProfile['apartment'] ?? '') ?>"></label>
     </div>
-    <button class="btn btn-ghost" style="margin-top: 1rem;">Сохранить адрес доставки</button>
+    <button class="btn btn-ghost" style="margin-top: 1rem;">Сохранить данные</button>
   </form>
 </section>
