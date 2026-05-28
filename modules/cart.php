@@ -81,6 +81,10 @@ $pageTitle = 'Корзина';
       <input type="hidden" name="action" value="clear">
       <button class="btn btn-ghost" title=""> Очистить 🛒 </button>
     </form>
-    <a href="/?route=checkout" class="btn btn-ghost">Оформить заказ →</a>
+    <?php if (current_user()): ?>
+      <a href="/?route=checkout" class="btn btn-ghost">Оформить заказ →</a>
+    <?php else: ?>
+      <a href="/?route=auth" class="btn btn-ghost">Войти для оформления заказа</a>
+    <?php endif; ?>
   </div>
 <?php endif; ?>

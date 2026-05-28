@@ -45,6 +45,7 @@ $routes = [
     'users'      => __DIR__ . '/modules/users.php',
     'admin'      => __DIR__ . '/modules/admin.php',
     'moderator'  => __DIR__ . '/modules/moderator.php',
+    '404'        => __DIR__ . '/modules/404.php',
 ];
 
 // Проверяем существование маршрута

@@ -32,7 +32,7 @@ function current_user() {
 function require_login() {
     if (!current_user()) {
         $_SESSION['flash'] = ['type'=>'error','msg'=>'Войдите в аккаунт'];
-        header('Location: /auth.php'); exit;
+        header('Location: /?route=auth'); exit;
     }
 }
 
