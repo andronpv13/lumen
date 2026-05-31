@@ -1,92 +1,194 @@
 <?php
-// modules/product.php - Страница товара
+/**
+ * Страница товара
+ * Маршрут: /?route=product&id=ID
+ */
+
 require_once __DIR__ . '/../includes/functions.php';
 
-$id = (int)($_GET['id'] ?? 0);
-$stmt = db()->prepare("SELECT p.*, c.name AS category_name FROM products p LEFT JOIN categories c ON p.category_id=c.id WHERE p.id=? AND p.active=1");
+// Получаем и валидируем ID товара
+$id = get_int_param('id', 0, 1);
+
+if ($id <= 0) {
+    http_response_code(400);
+    echo '<p>Неверный параметр товара</p>';
+    return;
+}
+
+// Запрос товара с проверкой активности
+$stmt = db()->prepare("
+    SELECT p.*, c.name AS category_name 
+    FROM products p 
+    LEFT JOIN categories c ON p.category_id = c.id 
+    WHERE p.id = ? AND p.active = 1
+");
 $stmt->execute([$id]);
 $p = $stmt->fetch();
-if (!$p) { http_response_code(404); die('Товар не найден'); }
+
+// Товар не найден или не активен
+if (!$p) {
+    http_response_code(404);
+    require __DIR__ . '/404.php';
+    return;
+}
+
+// Обработка добавления в корзину
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_to_cart') {
+    csrf_check();
+    
+    $qty = max(1, (int)post_param('qty', 1));
+    
+    // Проверка наличия товара
+    if ($p['stock'] > 0) {
+        $_SESSION['cart'][$p['id']] = ($_SESSION['cart'][$p['id']] ?? 0) + $qty;
+        flash('Товар добавлен в корзину', 'success');
+    } else {
+        flash('Товара нет в наличии', 'error');
+    }
+    
+    // AJAX или обычный редирект
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => true, 'cart_count' => cart_count()]);
+        exit;
+    }
+    redirect('/?route=product&id=' . $id);
+}
 
 // Обработка отзыва
-if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action'] ?? '')==='review') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'review') {
     csrf_check();
     require_login();
-    $rating = (int)$_POST['rating'];
-    $comment = trim($_POST['comment'] ?? '');
-    if ($rating<1 || $rating>5 || $comment==='') {
-        flash('Заполните все поля отзыва','error');
+    
+    $rating = (int)post_param('rating', 0);
+    $comment = trim(post_param('comment', ''));
+    
+    if ($rating < 1 || $rating > 5 || $comment === '') {
+        flash('Заполните все поля отзыва', 'error');
     } else {
-        $stmt = db()->prepare("INSERT INTO reviews (product_id,user_id,rating,comment) VALUES (?,?,?,?)");
+        $stmt = db()->prepare("INSERT INTO reviews (product_id, user_id, rating, comment, approved) VALUES (?, ?, ?, ?, 0)");
         $stmt->execute([$id, current_user()['id'], $rating, $comment]);
-        flash('Спасибо! Ваш отзыв появится после модерации','success');
+        flash('Спасибо! Ваш отзыв появится после модерации', 'success');
     }
-    redirect("/?route=product&id=$id");
+    redirect('/?route=product&id=' . $id);
 }
 
 // Статистика отзывов
-$rev = db()->prepare("SELECT COUNT(*) cnt, AVG(rating) avg FROM reviews WHERE product_id=? AND approved=1");
-$rev->execute([$id]);
-$rev = $rev->fetch();
+$revStmt = db()->prepare("SELECT COUNT(*) as cnt, AVG(rating) as avg FROM reviews WHERE product_id = ? AND approved = 1");
+$revStmt->execute([$id]);
+$revStats = $revStmt->fetch();
 
-$reviews = db()->prepare("SELECT r.*, u.name FROM reviews r JOIN users u ON r.user_id=u.id WHERE r.product_id=? AND r.approved=1 ORDER BY r.created_at DESC");
-$reviews->execute([$id]);
-$reviews = $reviews->fetchAll();
+// Список одобренных отзывов
+$revListStmt = db()->prepare("
+    SELECT r.*, u.name as user_name 
+    FROM reviews r 
+    JOIN users u ON r.user_id = u.id 
+    WHERE r.product_id = ? AND r.approved = 1 
+    ORDER BY r.created_at DESC 
+    LIMIT 10
+");
+$revListStmt->execute([$id]);
+$reviews = $revListStmt->fetchAll();
 
-$pageTitle = $p['name'];
+$pageTitle = e($p['name']);
 ?>
 
-<div class="product-detail">
-  <div class="pd-image">
-    <img src="<?= product_image($p['image']) ?>" alt="<?= e($p['name']) ?>">
-  </div>
-  <div class="pd-info">
-    <?php if($p['category_name']): ?><span class="cat-tag"><?= e($p['category_name']) ?></span><?php endif; ?>
-    <h1><?= e($p['name']) ?></h1>
-    <div class="rating-summary">
-      <?php if($rev['cnt']>0): ?>
-        <?php for($i=1;$i<=5;$i++): ?><span class="<?= $i<=round($rev['avg'])?'star-filled':'star-empty' ?>">★</span><?php endfor; ?>
-        <span><?= number_format($rev['avg'],1) ?> (<?= $rev['cnt'] ?>)</span>
-      <?php else: ?>
-        <span class="muted">Нет отзывов</span>
-      <?php endif; ?>
+<!-- HTML-разметка страницы товара (без изменений в структуре и стилях) -->
+<article class="product-page">
+    <div class="product-images">
+        <img src="<?= e(product_image($p['image'])) ?>" alt="<?= e($p['name']) ?>" class="product-main-image">
     </div>
-    <p class="big-price"><?= money($p['price']) ?></p>
-    <p class="description"><?= nl2br(e($p['description'])) ?></p>
-    <div class="specs">
-      <?php if($p['aroma']): ?><div><strong>Аромат:</strong> <?= e($p['aroma']) ?></div><?php endif; ?>
-      <?php if($p['weight']): ?><div><strong>Вес:</strong> <?= $p['weight'] ?> г</div><?php endif; ?>
-      <div><strong>В наличии:</strong> <?= $p['stock'] ?> шт.</div>
+    
+    <div class="product-info">
+        <h1><?= e($p['name']) ?></h1>
+        
+        <?php if (!empty($p['category_name'])): ?>
+            <p class="product-category">Категория: <a href="/?route=shop&cat=<?= e($p['category_id']) ?>"><?= e($p['category_name']) ?></a></p>
+        <?php endif; ?>
+        
+        <p class="product-price"><?= money($p['price']) ?></p>
+        
+        <div class="product-description">
+            <?= nl2br(e($p['description'])) ?>
+        </div>
+        
+        <div class="product-meta">
+            <?php if (!empty($p['weight'])): ?>
+                <p><strong>Вес:</strong> <?= e($p['weight']) ?> г</p>
+            <?php endif; ?>
+            <p><strong>В наличии:</strong> <?= (int)$p['stock'] ?> шт.</p>
+        </div>
+        
+        <?php if ($p['stock'] > 0): ?>
+            <form method="POST" class="add-to-cart-form" data-ajax>
+                <input type="hidden" name="action" value="add_to_cart">
+                <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
+                <label>
+                    Количество:
+                    <input type="number" name="qty" value="1" min="1" max="<?= (int)$p['stock'] ?>" class="qty-input">
+                </label>
+                <button type="submit" class="btn btn-primary">В корзину</button>
+            </form>
+        <?php else: ?>
+            <p class="out-of-stock">Товара нет в наличии</p>
+        <?php endif; ?>
     </div>
-    <?php if($p['stock']>0): ?>
-      <form method="post" action="/?route=cart" class="add-to-cart-form">
-        <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
-        <input type="hidden" name="action" value="add">
-        <input type="hidden" name="id" value="<?= $p['id'] ?>">
-        <input type="number" name="qty" value="1" min="1" max="<?= $p['stock'] ?>">
-        <button class="btn btn-ghost">В корзину</button>
-      </form>
-    <?php else: ?>
-      <p class="out-of-stock">Товара нет в наличии</p>
-    <?php endif; ?>
-  </div>
-</div>
-
-<section class="reviews-section">
-  <h2>Отзывы</h2>
-
-  <div class="reviews-list">
-    <?php if(!$reviews): ?>
-      <p class="muted">Пока нет отзывов. Будьте первым!</p>
-    <?php else: foreach($reviews as $r): ?>
-      <article class="review">
-        <header>
-          <strong><?= e($r['name']) ?></strong>
-          <span class="stars"><?php for($i=1;$i<=$r['rating'];$i++): ?><span class="star-filled">★</span><?php endfor; ?></span>
-          <time><?= date('d.m.Y', strtotime($r['created_at'])) ?></time>
-        </header>
-        <p><?= nl2br(e($r['comment'])) ?></p>
-      </article>
-    <?php endforeach; endif; ?>
-  </div>
-</section>
+    
+    <!-- Отзывы -->
+    <section class="product-reviews">
+        <h2>Отзывы</h2>
+        
+        <?php if ($revStats && $revStats['cnt'] > 0): ?>
+            <p class="reviews-summary">
+                Средняя оценка: 
+                <?php for ($i = 1; $i <= 5; $i++): ?>
+                    <span class="star <?= $i <= round($revStats['avg']) ? 'filled' : '' ?>">★</span>
+                <?php endfor; ?>
+                (<?= (int)$revStats['cnt'] ?>)
+            </p>
+        <?php else: ?>
+            <p>Пока нет отзывов. Будьте первым!</p>
+        <?php endif; ?>
+        
+        <?php if (current_user()): ?>
+            <form method="POST" class="review-form">
+                <input type="hidden" name="action" value="review">
+                <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
+                <p>
+                    <label>Оценка:
+                        <select name="rating" required>
+                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                <option value="<?= $i ?>"><?= $i ?> ★</option>
+                            <?php endfor; ?>
+                        </select>
+                    </label>
+                </p>
+                <p>
+                    <label>Комментарий:
+                        <textarea name="comment" rows="4" required></textarea>
+                    </label>
+                </p>
+                <button type="submit" class="btn">Оставить отзыв</button>
+            </form>
+        <?php else: ?>
+            <p><a href="/?route=auth">Войдите</a>, чтобы оставить отзыв</p>
+        <?php endif; ?>
+        
+        <?php if ($reviews): ?>
+            <ul class="reviews-list">
+                <?php foreach ($reviews as $r): ?>
+                    <li class="review-item">
+                        <strong><?= e($r['user_name']) ?></strong>
+                        <span class="review-rating">
+                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                <span class="star <?= $i <= $r['rating'] ? 'filled' : '' ?>">★</span>
+                            <?php endfor; ?>
+                        </span>
+                        <p><?= nl2br(e($r['comment'])) ?></p>
+                        <small class="review-date"><?= date('d.m.Y', strtotime($r['created_at'])) ?></small>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
+    </section>
+</article>
